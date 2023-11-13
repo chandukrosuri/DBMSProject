@@ -14,5 +14,5 @@
 	 `DB_PASSWORD=your_password`  
 	 `SECRET_KEY=your_secret_key (A 256 bit random Encryption key)`  
 	  
-	Remember to replace the text with your information
+	Remember to replace the text with your information  
  7. Run the Flask App `flask run`

@@ -21,5 +21,5 @@ with open(data, 'r') as infile:
             STATE = row[3] if len(row[3]) != 0 else "NULL"
             GDP = row[4] if len(row[4]) != 0 else "NULL"
             GDP_PERCENTAGE = row[5] if len(row[5]) != 0 else "NULL"
-            outfile.write("INSERT INTO " + TABLE_NAME + " (" + COUNTRY + "," + YEAR + "," + RANK + "," + GDP_PERCENTAGE + "," + GDP + "," + STATE + ");" + "\n")
+            outfile.write("INSERT INTO " + TABLE_NAME + " VALUES (" + COUNTRY + "," + YEAR + "," + RANK + "," + GDP_PERCENTAGE + "," + GDP + "," + STATE + ");" + "\n")
            

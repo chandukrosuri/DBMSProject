@@ -38,7 +38,7 @@ with open(data, 'r') as infile:
                 if (i % 3) == 2:
                     FEMALE = row[i].split(" ")[0]
                     YEAR = str(int_years[year_counter])
-                    outfile.write("INSERT INTO " + TABLE_NAME + " (" + COUNTRY + "," + YEAR + "," + BOTH_SEXES + "," + MALE + "," + FEMALE + ");" + "\n")
+                    outfile.write("INSERT INTO " + TABLE_NAME + " VALUES (" + COUNTRY + "," + YEAR + "," + BOTH_SEXES + "," + MALE + "," + FEMALE + ");" + "\n")
                     year_counter += 1
 
            

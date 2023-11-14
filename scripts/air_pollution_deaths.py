@@ -20,5 +20,5 @@ with open(data, 'r') as infile:
             TOTAL = row[3] if len(row[3]) != 0 else "NULL"
             INDOOR = row[4] if len(row[4]) != 0 else "NULL"
             OUTDOOR = row[5] if len(row[4]) != 0 else "NULL"
-            outfile.write("INSERT INTO " + TABLE_NAME + " (" + COUNTRY + "," + YEAR + "," + OUTDOOR + "," + INDOOR + "," + TOTAL + ");" + "\n")
+            outfile.write("INSERT INTO " + TABLE_NAME + " VALUES (" + COUNTRY + "," + YEAR + "," + OUTDOOR + "," + INDOOR + "," + TOTAL + ");" + "\n")
            

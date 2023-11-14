@@ -18,5 +18,5 @@ with open(data, 'r') as infile:
             COUNTRY = row[0].split("(")[0]
             YEAR = row[2] if len(row[2]) != 0 else "NULL"
             GDP_SPENDING = row[3] if len(row[3]) != 0 else "NULL"
-            outfile.write("INSERT INTO " + TABLE_NAME + " (" + COUNTRY + "," + YEAR + "," + GDP_SPENDING + ");" + "\n")
+            outfile.write("INSERT INTO " + TABLE_NAME + " VALUES (" + COUNTRY + "," + YEAR + "," + GDP_SPENDING + ");" + "\n")
            

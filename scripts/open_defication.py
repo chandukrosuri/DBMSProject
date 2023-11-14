@@ -39,7 +39,7 @@ with open(data, 'r') as infile:
                 if (i % 3) == 2:
                     RURAL = row[i].split(" ")[0] if len(row[i].split(" ")[0]) != 0 else "NULL"
                     YEAR = str(int_years[year_counter])
-                    outfile.write("INSERT INTO " + TABLE_NAME + " (" + COUNTRY + "," + YEAR + "," + RURAL + "," + URBAN + "," + TOTAL + ");" + "\n")
+                    outfile.write("INSERT INTO " + TABLE_NAME + " VALUES (" + COUNTRY + "," + YEAR + "," + RURAL + "," + URBAN + "," + TOTAL + ");" + "\n")
                     year_counter += 1
 
            

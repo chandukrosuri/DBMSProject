@@ -21,5 +21,5 @@ with open(data, 'r') as infile:
             BOTH_SEXES = row[2] if len(row[2]) != 0 else "NULL"
             MALE = row[3] if len(row[3]) != 0 else "NULL"
             FEMALE = row[4] if len(row[4]) != 0 else "NULL"
-            outfile.write("INSERT INTO " + TABLE_NAME + " (" + COUNTRY + "," + YEAR + "," + BOTH_SEXES + "," + MALE + "," + FEMALE + ");" + "\n")
+            outfile.write("INSERT INTO " + TABLE_NAME + " VALUES (" + COUNTRY + "," + YEAR + "," + BOTH_SEXES + "," + MALE + "," + FEMALE + ");" + "\n")
            

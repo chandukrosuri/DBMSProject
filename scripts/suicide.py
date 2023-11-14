@@ -22,5 +22,5 @@ with open(data, 'r') as infile:
             SUICIDE_NO = row[4] if len(row[4]) != 0 else "NULL"
             POPULATION = row[5] if len(row[5]) != 0 else "NULL"
             GDP = row[9].replace(",","") if len(row[9]) != 0 else "NULL"
-            outfile.write("INSERT INTO " + TABLE_NAME + " (" + COUNTRY + "," + YEAR + "," + SEX + "," + AGE + "," + SUICIDE_NO + "," + POPULATION + "," + GDP + ");" + "\n")
+            outfile.write("INSERT INTO " + TABLE_NAME + " VALUES (" + COUNTRY + "," + YEAR + "," + SEX + "," + AGE + "," + SUICIDE_NO + "," + POPULATION + "," + GDP + ");" + "\n")
            

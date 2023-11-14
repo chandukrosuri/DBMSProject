@@ -19,5 +19,5 @@ with open(data, 'r') as infile:
             YEARS = row[1].split("-")
             BIRTHS = row[2] if len(row[2]) != 0 else "NULL"
             for YEAR in YEARS:
-                outfile.write("INSERT INTO " + TABLE_NAME + " (" + COUNTRY + "," + YEAR + "," + BIRTHS + ");" + "\n")
+                outfile.write("INSERT INTO " + TABLE_NAME + " VALUES (" + COUNTRY + "," + YEAR + "," + BIRTHS + ");" + "\n")
            

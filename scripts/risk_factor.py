@@ -22,5 +22,5 @@ with open(data, 'r') as infile:
             AIRPOLLUTION = row[5] if len(row[5]) != 0 else "NULL"
             CHILDWASTING = row[8] if len(row[8]) != 0 else "NULL"
             CHILDSTUNTING = row[9] if len(row[9]) != 0 else "NULL"
-            outfile.write("INSERT INTO " + TABLE_NAME + " (" + COUNTRY + "," + YEAR + "," + WATER + "," + SANITATION + "," + CHILDWASTING + "," + CHILDSTUNTING + "," + AIRPOLLUTION + ");" + "\n")
+            outfile.write("INSERT INTO " + TABLE_NAME + " VALUES (" + COUNTRY + "," + YEAR + "," + WATER + "," + SANITATION + "," + CHILDWASTING + "," + CHILDSTUNTING + "," + AIRPOLLUTION + ");" + "\n")
            

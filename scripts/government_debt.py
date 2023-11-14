@@ -33,4 +33,4 @@ with open(data, 'r') as infile:
             for i in range(len(row)):
                 YEAR = str(int_years[i])
                 DEBT = row[i] if row[i] != "no data" else "NULL"
-                outfile.write("INSERT INTO " + TABLE_NAME + " (" + COUNTRY + "," + YEAR + "," + DEBT + ");" + "\n")
+                outfile.write("INSERT INTO " + TABLE_NAME + " VALUES (" + COUNTRY + "," + YEAR + "," + DEBT + ");" + "\n")

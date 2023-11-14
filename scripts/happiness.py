@@ -19,5 +19,5 @@ with open(data, 'r') as infile:
             CODE = row[1] if len(row[1]) != 0 else "NULL"
             YEAR = row[2] if len(row[2]) != 0 else "NULL"
             CANTRIL = row[3] if len(row[3]) != 0 else "NULL"
-            outfile.write("INSERT INTO " + TABLE_NAME + " (" + COUNTRY + "," + YEAR + "," + CANTRIL + "," + CODE + ");" + "\n")
+            outfile.write("INSERT INTO " + TABLE_NAME + " VALUES (" + COUNTRY + "," + YEAR + "," + CANTRIL + "," + CODE + ");" + "\n")
            

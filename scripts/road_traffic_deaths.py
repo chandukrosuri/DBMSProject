@@ -3,12 +3,12 @@ import sys
 import csv
 import os
 
-data = "../data/life_expectancy.csv"
-sql = "../sql_commands/life_expectancy.sql"
+data = "../data/road_traffic_deaths.csv"
+sql = "../sql_commands/road_traffic_deaths.sql"
 
-TABLE_NAME = "LIFE_EXPECTANCY"
+TABLE_NAME = "ROAD_TRAFFIC_DEATH"
 
-# Create .sql file for life expectancy
+# Create .sql file for road_traffic_deaths
 with open(data, 'r') as infile:
     with open(sql, 'w') as outfile:
         csv_reader = csv.reader(infile)
@@ -18,8 +18,8 @@ with open(data, 'r') as infile:
         for row in csv_reader:
             COUNTRY = row[0].split("(")[0]
             YEAR = row[1]
-            BOTH_SEXES = row[2] if len(row[2]) != 0 else "NULL"
-            MALE = row[3] if len(row[3]) != 0 else "NULL"
-            FEMALE = row[4] if len(row[4]) != 0 else "NULL"
+            BOTH_SEXES = row[2].split(" ")[0] if len(row[2].split(" ")[0]) != 0 else "NULL"
+            MALE = row[3].split(" ")[0] if len(row[3].split(" ")[0]) != 0 else "NULL"
+            FEMALE = row[4].split(" ")[0] if len(row[4].split(" ")[0]) != 0 else "NULL"
             outfile.write("INSERT INTO " + TABLE_NAME + " (" + COUNTRY + "," + YEAR + "," + BOTH_SEXES + "," + MALE + "," + FEMALE + ");" + "\n")
            

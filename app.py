@@ -189,10 +189,10 @@ def get_years():
 def get_data():
     db = get_db()
     cursor = db.cursor()
-    query_type = "debt_expen_ratio"
-    country = "India"
-    # query_type = request.args.get('query_type')
-    # country = request.args.get('country')
+    # query_type = "debt_expen_ratio"
+    # country = "India"
+    query_type = request.args.get('query_type')
+    country = request.args.get('country')
     if query_type == "education_gdp_ratio":
         query = assign_sql_query(query_type)
         print(query)

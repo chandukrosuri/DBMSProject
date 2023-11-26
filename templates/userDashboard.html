@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="{{ url_for('static',filename='js/app.js') }}"></script>
+</head>
+<body>
+
+    <h1>Welcome to the Dashboard</h1>
+
+    <div id="pageForm" method="get" action="">
+        <button type="button" onclick="navigateToPage('Q1')">Query 1</button>
+        <button type="button" onclick="navigateToPage('Q2')">Query 2</button>
+        <button type="button" onclick="navigateToPage('Q3')">Query 3</button>
+        <button type="button" onclick="navigateToPage('Q4')">Query 4</button>
+        <button type="button" onclick="navigateToPage('Q5')">Query 5</button>
+    </div>
+
+    
+
+</body>
+</html>

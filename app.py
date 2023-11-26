@@ -133,8 +133,6 @@ def query_page():
             final_country = get_common_attributes(country_debt,country_expen)
             return jsonify({'final_country': final_country , 'table_name': query_type})   
 
-
-
         # Call a function to handle the query and generate results (e.g., data for the graph)
         # query_results = handle_query(query_type, **params)
         # return jsonify(query_results)
@@ -169,10 +167,10 @@ def assign_sql_query(query_type):
 def get_years():
     db = get_db()
     cursor = db.cursor()
-    # query_type = request.args.get('query_type')
-    # country = request.args.get('country')
-    query_type = "debt_expen_ratio"
-    country = "India"
+    query_type = request.args.get('query_type')
+    country = request.args.get('country')
+    # query_type = "debt_expen_ratio"
+    # country = "India"
     # table1,table2 = assign_table_names(query_type)
     # subq = assign_sql_query(query_type)
     # print(subq)

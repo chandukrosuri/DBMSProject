@@ -131,8 +131,58 @@ def query_page():
             country_debt = get_available_countries(table1)
             country_expen = get_available_countries(table2)
             final_country = get_common_attributes(country_debt,country_expen)
-            return jsonify({'final_country': final_country , 'table_name': query_type})   
-
+            return jsonify({'final_country': final_country , 'table_name': query_type})
+        
+        elif query_type == "happiness_change":
+            query = """
+                WITH yearly_avg AS (
+                    SELECT c.continent, h.year, AVG(h.cantril_ladder_score) AS avg_happiness
+                    FROM rvarki.happiness h
+                    INNER JOIN rvarki.continent c ON h.countryname = c.country
+                    GROUP BY c.continent, h.year
+                ),
+                yearly_avg_lag AS (
+                    SELECT continent, year, avg_happiness, LAG(avg_happiness, 1) OVER (PARTITION BY continent ORDER BY year) AS prev_year_happiness
+                    FROM yearly_avg
+                )
+                SELECT DISTINCT continent
+                FROM yearly_avg_lag
+                WHERE prev_year_happiness IS NOT NULL
+                ORDER BY continent
+                """
+            db = get_db()
+            cursor = db.cursor()
+            cursor.execute(query)
+            result = cursor.fetchall()
+            cursor.close()
+            final_continents = [row[0] for row in result]
+            return jsonify({'final_continents': final_continents , 'table_name': query_type})
+        
+        elif query_type == "obesity_change":
+            query = """
+                WITH yearly_avg_obesity AS (
+                    SELECT c.continent, o.year, AVG(o.bothsexes) AS avg_obesity
+                    FROM rvarki.obesity o
+                    INNER JOIN rvarki.continent c ON o.countryname = c.country
+                    GROUP BY c.continent, o.year
+                ),
+                yearly_avg_obesity_lag AS (
+                    SELECT continent, year, avg_obesity, LAG(avg_obesity, 1) OVER (PARTITION BY continent ORDER BY year) AS prev_year_obesity
+                    FROM yearly_avg_obesity
+                )
+                SELECT DISTINCT continent
+                FROM yearly_avg_obesity_lag
+                WHERE prev_year_obesity IS NOT NULL
+                ORDER BY continent, year;
+                """
+            db = get_db()
+            cursor = db.cursor()
+            cursor.execute(query)
+            result = cursor.fetchall()
+            cursor.close()
+            final_continents = [row[0] for row in result]
+            print(final_continents)
+            return jsonify({'final_continents': final_continents , 'table_name': query_type})
         # Call a function to handle the query and generate results (e.g., data for the graph)
         # query_results = handle_query(query_type, **params)
         # return jsonify(query_results)
@@ -163,6 +213,44 @@ def assign_sql_query(query_type):
         ORDER BY year
         """
         return query
+    elif query_type == "happiness_change":
+        query = """
+        WITH yearly_avg AS (
+            SELECT c.continent, h.year, AVG(h.cantril_ladder_score) AS avg_happiness
+            FROM rvarki.happiness h
+            INNER JOIN rvarki.continent c ON h.countryname = c.country
+            GROUP BY c.continent, h.year
+        ),
+        yearly_avg_lag AS (
+            SELECT continent, year, avg_happiness, LAG(avg_happiness, 1) OVER (PARTITION BY continent ORDER BY year) AS prev_year_happiness
+            FROM yearly_avg
+        )
+        SELECT continent, year, avg_happiness, prev_year_happiness, (avg_happiness - prev_year_happiness) / prev_year_happiness * 100 AS percent_change
+        FROM yearly_avg_lag
+        WHERE prev_year_happiness IS NOT NULL AND continent = :continent
+        ORDER BY year
+        """
+        return query
+    elif query_type == "obesity_change":
+        query = """
+        WITH yearly_avg_obesity AS (
+            SELECT c.continent, o.year, AVG(o.bothsexes) AS avg_obesity
+            FROM rvarki.obesity o
+            INNER JOIN rvarki.continent c ON o.countryname = c.country
+            GROUP BY c.continent, o.year
+        ),
+        yearly_avg_obesity_lag AS (
+            SELECT continent, year, avg_obesity, LAG(avg_obesity, 1) OVER (PARTITION BY continent ORDER BY year) AS prev_year_obesity
+            FROM yearly_avg_obesity
+        )
+        SELECT continent, year, ROUND(avg_obesity, 2) AS avg_obesity, ROUND(prev_year_obesity,2) AS prev_year_obesity, ROUND((avg_obesity - prev_year_obesity) / prev_year_obesity * 100, 2) AS percent_change
+        FROM yearly_avg_obesity_lag
+        WHERE prev_year_obesity IS NOT NULL AND continent = :continent
+        ORDER BY continent, year
+        """
+        return query
+    elif query_type == "dentist_change":
+        query = """"""
 
 def get_years():
     db = get_db()
@@ -181,7 +269,7 @@ def get_years():
     cursor.close()
     if result:
         years = [row[0] for row in result]
-        print(years)
+        # print(years)
         return jsonify({'years_range': (min(years), max(years))})
     else:
         return jsonify({'error': 'No data found for the selected country'})
@@ -189,13 +277,13 @@ def get_years():
 def get_data():
     db = get_db()
     cursor = db.cursor()
-    # query_type = "debt_expen_ratio"
-    # country = "India"
-    query_type = request.args.get('query_type')
-    country = request.args.get('country')
+    query_type = "obesity_change"
+    country = "Africa"
+    # query_type = request.args.get('query_type')
+    # country = request.args.get('country')
     if query_type == "education_gdp_ratio":
         query = assign_sql_query(query_type)
-        print(query)
+        # print(query)
         cursor.execute(query,{'country': country})
         result = cursor.fetchall()
         cursor.close()
@@ -210,11 +298,11 @@ def get_data():
     
     elif query_type == "debt_expen_ratio":
         query = assign_sql_query(query_type)
-        print(query)
+        # print(query)
         cursor.execute(query,{'country': country})
         result = cursor.fetchall()
         cursor.close()
-        print(result)
+        # print(result)
     # Process the results to calculate the Debt/Expen ratio
         # for row in result:
         #     print(row[0],row[1],row[2])
@@ -224,8 +312,34 @@ def get_data():
         } for row in result]
         print(final_data)
         return jsonify(final_data)
-
-
+    
+    elif query_type == "happiness_change":
+        query = assign_sql_query(query_type)
+        # print(query)
+        cursor.execute(query,{'continent': country})
+        result = cursor.fetchall()
+        cursor.close()
+        # print(result)
+        final_data = [{
+            'year': row[1],
+            'percentage_change': row[4],  # Ensure not to divide by zero
+        } for row in result]
+        # print(final_data)
+        return jsonify(final_data)
+    
+    elif query_type == "obesity_change":
+        query = assign_sql_query(query_type)
+        # print(query)
+        cursor.execute(query,{'continent': country})
+        result = cursor.fetchall()
+        cursor.close()
+        # print(result)
+        final_data = [{
+            'year': row[1],
+            'percentage_change': row[4],  # Ensure not to divide by zero
+        } for row in result]
+        print(final_data)
+        return jsonify(final_data)
 
 
 if __name__ == '__main__':

@@ -384,6 +384,7 @@ def query_page():
             return jsonify({'final_country': final_country , 'table_name': query_type})
         
         elif query_type == "medical_contribution":
+            htmlPage = 5
             table1,table2 = assign_table_names(query_type)
             country_debt = get_available_countries(table1)
             country_expen = get_available_countries(table2)
@@ -393,7 +394,7 @@ def query_page():
         # query_results = handle_query(query_type, **params)
         # return jsonify(query_results)
 
-    return render_template('Q1.html')
+    return render_template('Q'+ htmlPage +'.html')
 
 def get_years():
     db = get_db()

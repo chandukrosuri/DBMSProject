@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify
+from sql import assign_sql_query
 import os
 import oracledb
 from dotenv import load_dotenv
@@ -26,7 +27,7 @@ def close_db(e=None):
 @app.route('/')
 def home():
     # print(len(final_country),final_country)
-    print(get_data())
+    # print(get_data())
     # print(get_years())
     return 'Welcome to DBMS Project'
 
@@ -183,93 +184,38 @@ def query_page():
             final_continents = [row[0] for row in result]
             print(final_continents)
             return jsonify({'final_continents': final_continents , 'table_name': query_type})
+        
+        elif query_type == "suicide_mean":
+            final_country = get_available_countries("rvarki.suicide_rate")
+            return jsonify({'final_country': final_country , 'table_name': query_type})  
+        
+        elif query_type == "pollution_rank":
+            final_country = get_available_countries("RVARKI.DEATHS_DUETO_AIRPOLLUTION")
+            return jsonify({'final_country': final_country , 'table_name': query_type})
         # Call a function to handle the query and generate results (e.g., data for the graph)
         # query_results = handle_query(query_type, **params)
         # return jsonify(query_results)
 
     return render_template('query_page.html')
-    
-def assign_sql_query(query_type):
-    if query_type == "education_gdp_ratio":
-        # query = f"select rvarki.gdp.year,rvarki.gdp.gdp,rvarki.average_schooling_years.avg_yearsof_schooling from rvarki.gdp join rvarki.average_schooling_years on rvarki.gdp.countryname=rvarki.average_schooling_years.countryname and rvarki.gdp.year=rvarki.average_schooling_years.year where rvarki.gdp.countryname = {country} order by year;"
-        query = """
-        SELECT rvarki.gdp.year, rvarki.gdp.gdp, rvarki.average_schooling_years.avg_yearsof_schooling 
-        FROM rvarki.gdp 
-        JOIN rvarki.average_schooling_years 
-        ON rvarki.gdp.countryname = rvarki.average_schooling_years.countryname 
-        AND rvarki.gdp.year = rvarki.average_schooling_years.year 
-        WHERE rvarki.gdp.countryname = :country 
-        ORDER BY year
-        """
-        return query
-    elif query_type == "debt_expen_ratio":
-        query = """
-        SELECT rvarki.government_debt.year, rvarki.government_debt.governmentdebt, rvarki.GOVERNMENT_EXPENDITURE.GOVERNMENT_EXPENDITURE 
-        FROM rvarki.GOVERNMENT_DEBT
-        JOIN rvarki.GOVERNMENT_EXPENDITURE 
-        ON rvarki.GOVERNMENT_DEBT.countryname = rvarki.GOVERNMENT_EXPENDITURE.countryname 
-        AND rvarki.GOVERNMENT_DEBT.year = rvarki.GOVERNMENT_EXPENDITURE.year 
-        WHERE rvarki.GOVERNMENT_DEBT.countryname = :country
-        ORDER BY year
-        """
-        return query
-    elif query_type == "happiness_change":
-        query = """
-        WITH yearly_avg AS (
-            SELECT c.continent, h.year, AVG(h.cantril_ladder_score) AS avg_happiness
-            FROM rvarki.happiness h
-            INNER JOIN rvarki.continent c ON h.countryname = c.country
-            GROUP BY c.continent, h.year
-        ),
-        yearly_avg_lag AS (
-            SELECT continent, year, avg_happiness, LAG(avg_happiness, 1) OVER (PARTITION BY continent ORDER BY year) AS prev_year_happiness
-            FROM yearly_avg
-        )
-        SELECT continent, year, avg_happiness, prev_year_happiness, (avg_happiness - prev_year_happiness) / prev_year_happiness * 100 AS percent_change
-        FROM yearly_avg_lag
-        WHERE prev_year_happiness IS NOT NULL AND continent = :continent
-        ORDER BY year
-        """
-        return query
-    elif query_type == "obesity_change":
-        query = """
-        WITH yearly_avg_obesity AS (
-            SELECT c.continent, o.year, AVG(o.bothsexes) AS avg_obesity
-            FROM rvarki.obesity o
-            INNER JOIN rvarki.continent c ON o.countryname = c.country
-            GROUP BY c.continent, o.year
-        ),
-        yearly_avg_obesity_lag AS (
-            SELECT continent, year, avg_obesity, LAG(avg_obesity, 1) OVER (PARTITION BY continent ORDER BY year) AS prev_year_obesity
-            FROM yearly_avg_obesity
-        )
-        SELECT continent, year, ROUND(avg_obesity, 2) AS avg_obesity, ROUND(prev_year_obesity,2) AS prev_year_obesity, ROUND((avg_obesity - prev_year_obesity) / prev_year_obesity * 100, 2) AS percent_change
-        FROM yearly_avg_obesity_lag
-        WHERE prev_year_obesity IS NOT NULL AND continent = :continent
-        ORDER BY continent, year
-        """
-        return query
-    elif query_type == "dentist_change":
-        query = """"""
 
 def get_years():
     db = get_db()
     cursor = db.cursor()
-    query_type = request.args.get('query_type')
-    country = request.args.get('country')
-    # query_type = "debt_expen_ratio"
-    # country = "India"
+    # query_type = request.args.get('query_type')
+    # country = request.args.get('country')
+    query_type = "pollution_rank"
+    country = "Italy"
     # table1,table2 = assign_table_names(query_type)
     # subq = assign_sql_query(query_type)
     # print(subq)
     query = assign_sql_query(query_type)
-    print(query)
+    # print(query)
     cursor.execute(query, {'country': country})
     result = cursor.fetchall()
     cursor.close()
     if result:
         years = [row[0] for row in result]
-        # print(years)
+        print(years)
         return jsonify({'years_range': (min(years), max(years))})
     else:
         return jsonify({'error': 'No data found for the selected country'})
@@ -277,8 +223,8 @@ def get_years():
 def get_data():
     db = get_db()
     cursor = db.cursor()
-    query_type = "obesity_change"
-    country = "Africa"
+    query_type = "pollution_rank"
+    country = "Italy"
     # query_type = request.args.get('query_type')
     # country = request.args.get('country')
     if query_type == "education_gdp_ratio":
@@ -337,6 +283,34 @@ def get_data():
         final_data = [{
             'year': row[1],
             'percentage_change': row[4],  # Ensure not to divide by zero
+        } for row in result]
+        print(final_data)
+        return jsonify(final_data)
+    
+    elif query_type == "suicide_mean":
+        query = assign_sql_query(query_type)
+        # print(query)
+        cursor.execute(query,{'country': country})
+        result = cursor.fetchall()
+        cursor.close()
+        # print(result)
+        final_data = [{
+            'year': row[0],
+            'mean_deviation': row[1],  # Ensure not to divide by zero
+        } for row in result]
+        print(final_data)
+        return jsonify(final_data)
+    
+    elif query_type == "pollution_rank":
+        query = assign_sql_query(query_type)
+        # print(query)
+        cursor.execute(query,{'country': country})
+        result = cursor.fetchall()
+        cursor.close()
+        # print(result)
+        final_data = [{
+            'year': row[0],
+            'rank': row[3],  # Ensure not to divide by zero
         } for row in result]
         print(final_data)
         return jsonify(final_data)

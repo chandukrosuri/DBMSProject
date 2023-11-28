@@ -1,5 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify
-from sql import assign_sql_query, jsonify, json
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify, json
+from sql import assign_sql_query
 import os
 import oracledb
 from dotenv import load_dotenv
@@ -293,6 +293,7 @@ def query_page():
     if request.method == 'POST':
         # Process the selected query and parameters
         query_type = request.get_data(as_text=True)
+        htmlPage = 1
         # Additional parameters based on the selected query
         if query_type == "education_gdp_ratio":
             print("entered: " + query_type)
@@ -301,6 +302,7 @@ def query_page():
             final_country = get_common_attributes(country_education,country_gpd)
             years = get_years('rvarki.average_schooling_years', 'rvarki.gdp')
             print("years: "+str(years))
+            htmlPage = 1
             return jsonify({'final_country': list(final_country) , 'table_name': query_type, 'years': list(sorted(years))})      
 
         elif query_type == "debt_expen_ratio":
@@ -308,9 +310,11 @@ def query_page():
             country_debt = get_available_countries(table1)
             country_expen = get_available_countries(table2)
             final_country = get_common_attributes(country_debt,country_expen)
+            htmlPage = 1
             return jsonify({'final_country': final_country , 'table_name': query_type})
         
         elif query_type == "happiness_change":
+            htmlPage = 2
             query = """
                 WITH yearly_avg AS (
                     SELECT c.continent, h.year, AVG(h.cantril_ladder_score) AS avg_happiness
@@ -336,6 +340,7 @@ def query_page():
             return jsonify({'final_continents': final_continents , 'table_name': query_type})
         
         elif query_type == "obesity_change":
+            htmlPage = 2
             query = """
                 WITH yearly_avg_obesity AS (
                     SELECT c.continent, o.year, AVG(o.bothsexes) AS avg_obesity
@@ -362,17 +367,19 @@ def query_page():
             return jsonify({'final_continents': final_continents , 'table_name': query_type})
         
         elif query_type == "suicide_mean":
+            htmlPage = 3
             final_country = get_available_countries("rvarki.suicide_rate")
             return jsonify({'final_country': final_country , 'table_name': query_type})  
         
         elif query_type == "pollution_rank":
+            htmlPage = 4
             final_country = get_available_countries("RVARKI.DEATHS_DUETO_AIRPOLLUTION")
             return jsonify({'final_country': final_country , 'table_name': query_type})
         # Call a function to handle the query and generate results (e.g., data for the graph)
         # query_results = handle_query(query_type, **params)
         # return jsonify(query_results)
 
-    return render_template('query_page.html')
+    return render_template('Q1.html')
 
 def get_data():
     db = get_db()

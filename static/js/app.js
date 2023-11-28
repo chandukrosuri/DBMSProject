@@ -1,9 +1,20 @@
 function navigateToPage(pageName) {
     // Set the action attribute of the form to the Flask route
     console.log(pageName);
-    var url = '/' + pageName;
-    window
+    var url = '/query-page/' + pageName;
+    window.location.href = url
 }
+
+$(function() {    
+    $('option').on('click', function(event) {
+        event.preventDefault();
+        var value1 = $('#value1_q1').val();
+        var value2 = $('#value2_q1').val();
+        var value3 = $('#value3_q1').val();
+        var form = document.getElementById("q1Form");
+        var formName = form.name;
+    })
+});
 
 function toggleDropdown() {
     var dropdownContent = document.getElementById("dropdownContent");
@@ -140,20 +151,24 @@ $(document).ready(function() {
     $('#submit-query-type').on('click', function(event) {
         event.preventDefault();
         var queryTypes = [].slice.call(document.getElementById('query-type'));
-        var selctedType = queryTypes.filter(child => {return child.selected;})[0].value;
+        var selectedType = queryTypes.filter(child => {return child.selected;})[0].value;
 
-        if(selctedType === "default"){
+        if(selectedType === "default"){
             alert("Please select a card type");
         } else {
-            getQueryPage(selctedType);
+            console.log(selectedType);
+            console.log(selectedType.split("-"));
+            var queryType = selectedType.split("-")[0];
+            var pageNumber = selectedType.split("-")[1];
+            getQueryPage(queryType, pageNumber);
         }
     })
 });
 
-function getQueryPage(queryType){
+function getQueryPage(queryType, pageNumber){
     console.log("here");
     $.ajax({
-        url: '/query-page',
+        url: ('/query-page').concat("/",pageNumber),
         method: 'POST',
         data: queryType,
         processData: false,

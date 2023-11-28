@@ -14,6 +14,13 @@
     <div class="navbar">
         <div class="nav-left">
             <a href="/">Dashboard</a>
+            <select name="query-select" id="query-select" onchange="navigateToPage(this.value)" required>
+                <option value = 1>Analysis - 1 </option>
+                <option value = 2>Analysis - 2 </option>
+                <option value = 3>Analysis - 3 </option>
+                <option value = 4>Analysis - 4 </option>
+                <option value = 5>Analysis - 5 </option>
+            </select>
         </div>
 
         <!-- Right-aligned: Feedback, Profile, Logout -->
@@ -28,8 +35,8 @@
             <label for = "query-type">Select one of the topics to analyze:</label>
             <select name="query-type" id="query-type" required>
                 <option value="default">-- select one --</option>
-                <option value="education_gdp_ratio">Average years of schooling vs GDP </option>
-                <option value="debt_expen_ratio">Government debt VS Government expenditure</option>
+                <option value="education_gdp_ratio-1">Average years of schooling vs GDP </option>
+                <option value="debt_expen_ratio-1">Government debt VS Government expenditure</option>
             </select>
             <button type = "button" class = "btn btn-info" id = "submit-query-type">submit</button>
         </div>

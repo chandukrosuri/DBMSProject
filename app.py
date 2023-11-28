@@ -29,8 +29,6 @@ def home():
     # print(len(final_country),final_country)
     # print(get_data())
     # print(get_years())
-    # print(len(final_country),final_country)
-    # print(get_years())
     return 'Welcome to DBMS Project'
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -138,35 +136,35 @@ def get_years(table1, table2):
     print("common: "+str(set(arr1) & set(arr2)))
     return set(arr1) & set(arr2)  # Returns an array with years in ascending order
 
-@app.route('/query-page', methods=['POST', 'GET'])
-def query_page():
-    if request.method == 'POST':
-        # Process the selected query and parameters
-        print("query type: "+request.get_data(as_text=True))
-        query_type = request.get_data(as_text=True)
-        # Additional parameters based on the selected query
-        if query_type == "education_gdp_ratio":
-            print("entered: " + query_type)
-            country_education = get_available_countries('rvarki.average_schooling_years')
-            country_gpd = get_available_countries('rvarki.gdp')
-            final_country = get_common_attributes(country_education,country_gpd)
-            years = get_years('rvarki.average_schooling_years', 'rvarki.gdp')
-            print("years: "+str(years))
-            return jsonify({'final_country': list(final_country) , 'table_name': query_type, 'years': list(sorted(years))})      
+# @app.route('/query-page', methods=['POST', 'GET'])
+# def query_page():
+#     if request.method == 'POST':
+#         # Process the selected query and parameters
+#         print("query type: "+request.get_data(as_text=True))
+#         query_type = request.get_data(as_text=True)
+#         # Additional parameters based on the selected query
+#         if query_type == "education_gdp_ratio":
+#             print("entered: " + query_type)
+#             country_education = get_available_countries('rvarki.average_schooling_years')
+#             country_gpd = get_available_countries('rvarki.gdp')
+#             final_country = get_common_attributes(country_education,country_gpd)
+#             years = get_years('rvarki.average_schooling_years', 'rvarki.gdp')
+#             print("years: "+str(years))
+#             return jsonify({'final_country': list(final_country) , 'table_name': query_type, 'years': list(sorted(years))})      
 
-        elif query_type == "debt_expen_ratio":
-            print("entered: " + query_type)
-            table1,table2 = assign_table_names(query_type)
-            country_debt = get_available_countries(table1)
-            country_expen = get_available_countries(table2)
-            final_country = get_common_attributes(country_debt,country_expen)
-            return jsonify({'final_country': final_country , 'table_name': query_type})   
+#         elif query_type == "debt_expen_ratio":
+#             print("entered: " + query_type)
+#             table1,table2 = assign_table_names(query_type)
+#             country_debt = get_available_countries(table1)
+#             country_expen = get_available_countries(table2)
+#             final_country = get_common_attributes(country_debt,country_expen)
+#             return jsonify({'final_country': final_country , 'table_name': query_type})   
 
-        # Call a function to handle the query and generate results (e.g., data for the graph)
-        # query_results = handle_query(query_type, **params)
-        # return jsonify(query_results)
+#         # Call a function to handle the query and generate results (e.g., data for the graph)
+#         # query_results = handle_query(query_type, **params)
+#         # return jsonify(query_results)
 
-    return render_template('Q1.html')
+#     return render_template('Q1.html')
     
 def assign_sql_query(query_type):
     if query_type == "education_gdp_ratio":
@@ -193,28 +191,6 @@ def assign_sql_query(query_type):
         ORDER BY year
         """
         return query
-
-# def get_years():
-#     db = get_db()
-#     cursor = db.cursor()
-#     query_type = request.args.get('query_type')
-#     country = request.args.get('country')
-#     # query_type = "debt_expen_ratio"
-#     # country = "India"
-#     # table1,table2 = assign_table_names(query_type)
-#     # subq = assign_sql_query(query_type)
-#     # print(subq)
-#     query = assign_sql_query(query_type)
-#     print(query)
-#     cursor.execute(query, {'country': country})
-#     result = cursor.fetchall()
-#     cursor.close()
-#     if result:
-#         years = [row[0] for row in result]
-#         print(years)
-#         return jsonify({'years_range': (min(years), max(years))})
-#     else:
-#         return jsonify({'error': 'No data found for the selected country'})
 
 @app.route("/query-data", methods = ['POST'])
 def get_data():
@@ -264,10 +240,6 @@ def get_data():
 def userdahsboard():
     return render_template('userDashboard.html')
 
-# @app.route('/Q1', methods=['GET'])
-# def process_q1():
-#     return render_template('Q1.html')
-
 @app.route('/Q2', methods = ['GET','POST'])
 def page2():
     if request.method=='POST':
@@ -315,29 +287,21 @@ def assign_table_names(query_type):
     elif query_type == "debt_expen_ratio":
         return ['rvarki.GOVERNMENT_DEBT','rvarki.GOVERNMENT_EXPENDITURE']
     
-def get_available_countries(table_name):
-    db = get_db()
-    cursor = db.cursor()
-    query = f"select DISTINCT countryname from {table_name} order by countryname"
-    cursor.execute(query)
-    countries = cursor.fetchall()
-    cursor.close()
-    arr = []
-    for _ in countries:
-        arr.append(_[0])
-    return arr  # Returns an array with names of countries in alphabetical order
 
-@app.route('/query_page', methods=['GET', 'POST'])
+@app.route('/query-page', methods=['GET', 'POST'])
 def query_page():
     if request.method == 'POST':
         # Process the selected query and parameters
-        query_type = request.form.get('query_type')
+        query_type = request.get_data(as_text=True)
         # Additional parameters based on the selected query
         if query_type == "education_gdp_ratio":
+            print("entered: " + query_type)
             country_education = get_available_countries('rvarki.average_schooling_years')
             country_gpd = get_available_countries('rvarki.gdp')
             final_country = get_common_attributes(country_education,country_gpd)
-            return jsonify({'final_country': final_country , 'table_name': query_type})      
+            years = get_years('rvarki.average_schooling_years', 'rvarki.gdp')
+            print("years: "+str(years))
+            return jsonify({'final_country': list(final_country) , 'table_name': query_type, 'years': list(sorted(years))})      
 
         elif query_type == "debt_expen_ratio":
             table1,table2 = assign_table_names(query_type)
@@ -409,28 +373,6 @@ def query_page():
         # return jsonify(query_results)
 
     return render_template('query_page.html')
-
-def get_years():
-    db = get_db()
-    cursor = db.cursor()
-    # query_type = request.args.get('query_type')
-    # country = request.args.get('country')
-    query_type = "pollution_rank"
-    country = "Italy"
-    # table1,table2 = assign_table_names(query_type)
-    # subq = assign_sql_query(query_type)
-    # print(subq)
-    query = assign_sql_query(query_type)
-    # print(query)
-    cursor.execute(query, {'country': country})
-    result = cursor.fetchall()
-    cursor.close()
-    if result:
-        years = [row[0] for row in result]
-        print(years)
-        return jsonify({'years_range': (min(years), max(years))})
-    else:
-        return jsonify({'error': 'No data found for the selected country'})
 
 def get_data():
     db = get_db()

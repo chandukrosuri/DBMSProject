@@ -89,3 +89,7 @@ body {
     height: 50%;
     width: 50%;
 }
+
+option {
+    text-align: center;
+}

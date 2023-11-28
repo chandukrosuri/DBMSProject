@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g, jsonify, json
 import os
 import oracledb
 from dotenv import load_dotenv
@@ -22,9 +22,12 @@ def close_db(e=None):
     if db is not None:
         db.close()
 
-# @app.route('/')
-# def home():
-#     return 'Welcome to DBMS Project'
+
+@app.route('/')
+def home():
+    # print(len(final_country),final_country)
+    # print(get_years())
+    return 'Welcome to DBMS Project'
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -89,28 +92,176 @@ def register():
             return redirect(url_for('login'))
     return render_template('register.html')
 
-@app.route('/', methods = ['GET'])
+def get_common_attributes(arr1,arr2):
+        return set(arr1).intersection(set(arr2))
+
+def assign_table_names(query_type):
+    if query_type == "education_gdp_ratio":
+        return ['rvarki.average_schooling_years','rvarki.gdp']
+    elif query_type == "debt_expen_ratio":
+        return ['rvarki.GOVERNMENT_DEBT','rvarki.GOVERNMENT_EXPENDITURE']
+    
+def get_available_countries(table_name):
+    db = get_db()
+    cursor = db.cursor()
+    query = f"select DISTINCT countryname from {table_name} order by countryname"
+    cursor.execute(query)
+    countries = cursor.fetchall()
+    cursor.close()
+    arr = []
+    for _ in countries:
+        arr.append(_[0])
+    return arr  # Returns an array with names of countries in alphabetical order
+
+def get_years(table1, table2):
+    db = get_db()
+    cursor = db.cursor()
+    query_1 = f"select DISTINCT t1.year from {table1} t1"
+    query_2 = f"select DISTINCT t2.year from {table2} t2"
+    cursor.execute(query_1)
+    table_1_years = cursor.fetchall()
+    cursor.execute(query_2)
+    table_2_years = cursor.fetchall()
+    cursor.close()
+    arr1 = []
+    for _ in table_1_years:
+        arr1.append(_[0])
+    # print("t1.years: " + str(arr1))
+    arr2 = []
+    for _ in table_2_years:
+        arr2.append(_[0])
+    # print("t2.years: " + str(arr2))
+    print("common: "+str(set(arr1) & set(arr2)))
+    return set(arr1) & set(arr2)  # Returns an array with years in ascending order
+
+@app.route('/query-page', methods=['POST', 'GET'])
+def query_page():
+    if request.method == 'POST':
+        # Process the selected query and parameters
+        print("query type: "+request.get_data(as_text=True))
+        query_type = request.get_data(as_text=True)
+        # Additional parameters based on the selected query
+        if query_type == "education_gdp_ratio":
+            print("entered: " + query_type)
+            country_education = get_available_countries('rvarki.average_schooling_years')
+            country_gpd = get_available_countries('rvarki.gdp')
+            final_country = get_common_attributes(country_education,country_gpd)
+            years = get_years('rvarki.average_schooling_years', 'rvarki.gdp')
+            print("years: "+str(years))
+            return jsonify({'final_country': list(final_country) , 'table_name': query_type, 'years': list(sorted(years))})      
+
+        elif query_type == "debt_expen_ratio":
+            print("entered: " + query_type)
+            table1,table2 = assign_table_names(query_type)
+            country_debt = get_available_countries(table1)
+            country_expen = get_available_countries(table2)
+            final_country = get_common_attributes(country_debt,country_expen)
+            return jsonify({'final_country': final_country , 'table_name': query_type})   
+
+        # Call a function to handle the query and generate results (e.g., data for the graph)
+        # query_results = handle_query(query_type, **params)
+        # return jsonify(query_results)
+
+    return render_template('Q1.html')
+    
+def assign_sql_query(query_type):
+    if query_type == "education_gdp_ratio":
+        # query = f"select rvarki.gdp.year,rvarki.gdp.gdp,rvarki.average_schooling_years.avg_yearsof_schooling from rvarki.gdp join rvarki.average_schooling_years on rvarki.gdp.countryname=rvarki.average_schooling_years.countryname and rvarki.gdp.year=rvarki.average_schooling_years.year where rvarki.gdp.countryname = {country} order by year;"
+        query = """
+        SELECT rvarki.gdp.year, rvarki.gdp.gdp, rvarki.average_schooling_years.avg_yearsof_schooling 
+        FROM rvarki.gdp 
+        JOIN rvarki.average_schooling_years 
+        ON rvarki.gdp.countryname = rvarki.average_schooling_years.countryname 
+        AND rvarki.gdp.year = rvarki.average_schooling_years.year 
+        WHERE rvarki.gdp.countryname = :country 
+        ORDER BY year
+        """
+        return query
+    elif query_type == "debt_expen_ratio":
+        query = """
+        SELECT rvarki.government_debt.year, rvarki.government_debt.governmentdebt, rvarki.GOVERNMENT_EXPENDITURE.GOVERNMENT_EXPENDITURE 
+        FROM rvarki.GOVERNMENT_DEBT
+        JOIN rvarki.GOVERNMENT_EXPENDITURE 
+        ON rvarki.GOVERNMENT_DEBT.countryname = rvarki.GOVERNMENT_EXPENDITURE.countryname 
+        AND rvarki.GOVERNMENT_DEBT.year = rvarki.GOVERNMENT_EXPENDITURE.year 
+        WHERE rvarki.GOVERNMENT_DEBT.countryname = :country
+        ORDER BY year
+        """
+        return query
+
+# def get_years():
+#     db = get_db()
+#     cursor = db.cursor()
+#     query_type = request.args.get('query_type')
+#     country = request.args.get('country')
+#     # query_type = "debt_expen_ratio"
+#     # country = "India"
+#     # table1,table2 = assign_table_names(query_type)
+#     # subq = assign_sql_query(query_type)
+#     # print(subq)
+#     query = assign_sql_query(query_type)
+#     print(query)
+#     cursor.execute(query, {'country': country})
+#     result = cursor.fetchall()
+#     cursor.close()
+#     if result:
+#         years = [row[0] for row in result]
+#         print(years)
+#         return jsonify({'years_range': (min(years), max(years))})
+#     else:
+#         return jsonify({'error': 'No data found for the selected country'})
+
+@app.route("/query-data", methods = ['POST'])
+def get_data():
+    value1_q1 = int(request.form.get('value1_q1'))
+    value2_q1 = int(request.form.get('value2_q1'))
+    value3_q1 = request.form.get('value3_q1')
+    query_type = request.form.get('query_type')
+    print("qt: "+query_type)
+    print("bool: "+str(query_type == "education_gdp_ratio"))
+    
+    db = get_db()
+    cursor = db.cursor()
+    if query_type == "education_gdp_ratio":
+        print("val1: "+str(value1_q1)+" val2: "+str(value2_q1)+" val3: "+value3_q1+" type: "+query_type)
+        query = assign_sql_query(query_type)
+        # print(query)
+        cursor.execute(query,{'country': value3_q1})
+        result = cursor.fetchall()
+        cursor.close()
+
+    # Process the results to calculate the GDP/Education ratio
+        final_data = [{
+            'year': row[0],
+            'ratio': (row[1] / row[2]) if row[2] else None  # Ensure not to divide by zero
+        } for row in result]
+        print(final_data)
+        return jsonify(final_data)
+    
+    elif query_type == "debt_expen_ratio":
+        query = assign_sql_query(query_type)
+        print(query)
+        cursor.execute(query,{'country': country})
+        result = cursor.fetchall()
+        cursor.close()
+        print(result)
+    # Process the results to calculate the Debt/Expen ratio
+        # for row in result:
+        #     print(row[0],row[1],row[2])
+        final_data = [{
+            'year': row[0],
+            'ratio': (row[1] / row[2]) if row[1] and row[2] else None  # Ensure not to divide by zero
+        } for row in result]
+        print(final_data)
+        return jsonify(final_data)
+
+@app.route('/dashboard', methods = ['GET'])
 def userdahsboard():
     return render_template('userDashboard.html')
 
-@app.route('/Q1', methods=['GET', 'POST'])
-def process_q1():
-    if request.method == 'POST':
-        value1_q1 = int(request.form.get('value1_q1'))
-        value2_q1 = int(request.form.get('value2_q1'))
-        p1 = Person("John", 36)
-        p2 = Person("John", 36)
-        list1 = []
-        list1.append(p1.to_dict())
-        list1.append(p2.to_dict())
-
-        # Perform some computation based on the form data
-        result = value1_q1 + value2_q1  # Replace this with your actual computation
-
-        # Return the result as JSON
-        return {'result': list1}
-
-    return render_template('Q1.html')
+# @app.route('/Q1', methods=['GET'])
+# def process_q1():
+#     return render_template('Q1.html')
 
 @app.route('/Q2', methods = ['GET','POST'])
 def page2():
@@ -145,7 +296,7 @@ def feedbackPage():
     if request.method == 'POST':
         feedback = request.form.get('feedback-text')
         rating = request.form.get('rating')
-    return render_template('Q1.html', pageName = "feedback")
+    return render_template('feedback.html', pageName = "feedback")
 
 @app.route('/logout', methods = ['GET'])
 def logout():

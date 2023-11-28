@@ -1,5 +1,3 @@
-<!-- templates/Q1.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,19 +12,7 @@
 </head>
 <body>
     <div class="navbar">
-        <!-- Center-aligned: Dashboard -->
-        
         <div class="nav-left">
-            <!--<div class="dropdown">
-                <button class="dropbtn">Dropdown 
-                  <i class="fa fa-caret-down"></i>
-                </button>
-                <div class="dropdown-content">
-                  <a href="#">Link 1</a>
-                  <a href="#">Link 2</a>
-                  <a href="#">Link 3</a>
-                </div>
-              </div>  -->
             <a href="/">Dashboard</a>
         </div>
 
@@ -37,26 +23,32 @@
             <a href="/logout">Logout</a>
         </div>
     </div>
-
     <div class = "content">
-        <div>
-            <h2>Form for Q1</h2>
+        <div class = "query-selector" name = "queryselection" id = "querySelector">
+            <label for = "query-type">Select one of the topics to analyze:</label>
+            <select name="query-type" id="query-type" required>
+                <option value="default">-- select one --</option>
+                <option value="education_gdp_ratio">Average years of schooling vs GDP </option>
+                <option value="debt_expen_ratio">Government debt VS Government expenditure</option>
+            </select>
+            <button type = "button" class = "btn btn-info" id = "submit-query-type">submit</button>
+        </div>
+        <div class = "filters d-none">
+            <label for = "q1Form">Select filters to view the trend analysis</label>
             <form id = "q1Form">
                 <!-- Form fields for Q1 -->
-                <label for="value1_q1">Select the time range</label>
-                <select type="number" name="value1_q1" id="value1_q1" required>
-                    {% for year in range(1900, 2024) %}
-                        <option value="{{ year }}">{{ year }}</option>
-                    {% endfor %}
-                </select>
-
-                <select type="number" name="value2_q1" id="value2_q1" required>
-                    {% for year in range(1900, 2024) %}
-                        <option value="{{ year }}">{{ year }}</option>
-                    {% endfor %}
-                </select>
-
-                <button type="submit" id = 'submitForm'>Submit Q1</button>
+                <div class="d-none" id = "selects">
+                    <select type="number" name="value1_q1" id="value1_q1" required>
+                        <option value="-1">--</option>
+                    </select>
+                    <select type="number" name="value2_q1" id="value2_q1" required>
+                        <option value="-1">--</option>
+                    </select>
+                    <select type="string" name="value3_q1" id="value3_q1" required multiple>
+                        <option value="-1">--</option>
+                    </select>
+                    <button type="submit" id = "submitForm">Submit Q1 </button>
+                </div>
             </form>
 
             <!-- Result container -->

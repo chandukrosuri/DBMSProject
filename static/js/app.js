@@ -2,7 +2,7 @@ function navigateToPage(pageName) {
     // Set the action attribute of the form to the Flask route
     console.log(pageName);
     var url = '/' + pageName;
-    window.location.href = url;
+    window
 }
 
 function toggleDropdown() {
@@ -15,17 +15,18 @@ function toggleDropdown() {
 //     resultContainer.style.display = "block";
 //     window.location.href = "/" + pageName;
 // }
-
-$(document).ready(function() {
-    // Event listener for form submission
+  // Event listener for form submission
+$(function() {    
     $('#submitForm').on('click', function(event) {
+        console.log("event: ", event);
         event.preventDefault();
         var form = document.getElementById('q1Form');
         var formData = new FormData(form);
+        formData.append("query_type", form.name);
         console.log("formDate: ", formData);
 
         $.ajax({
-            url: '/Q1',
+            url: '/query-data',
             method: 'POST',
             data: formData,
             processData: false,
@@ -33,9 +34,10 @@ $(document).ready(function() {
             success: function(response) {
                 // Handle the response here
                 console.log('Data received:', response);
+                console.log(response.type);
                 console.log("res:", JSON.stringify(response.result));
                 $("#result-container").removeClass("d-none");
-                updateChart(response.result)
+                updateChart(response)
             },
             error: (functionError => {
                 console.log(functionError);
@@ -44,26 +46,91 @@ $(document).ready(function() {
     })
 });
 
+
 function updateChart(data) {
-    console.log("response data: ", data);
+    console.log("response data: ", data[0].ratio);
     const ctx = document.getElementById('myChart');
 
     new Chart(ctx, {
-        type: 'bar',
+        type: 'line',  // Change the type to 'line'
         data: {
-        labels: data.map(function(item) { return item["name"]; }),
-        datasets: [{
-            label: '# of Votes',
-            data: [12, 19, 3, 5, 2, 3],
-            borderWidth: 1
-        }]
+            labels: data.map(item => item.year),
+            datasets: [{
+                label: 'ratio',
+                data: data.map(item => item.ratio),
+                borderWidth: 1,
+                borderColor: 'rgba(75, 192, 192, 1)',  // You can set the line color
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',  // You can set the fill color
+            }]
         },
         options: {
-        scales: {
-            y: {
-            beginAtZero: true
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom'
+                },
+                y: {
+                    beginAtZero: true
+                }
             }
         }
+    });
+}
+
+
+$(document).ready(function() {
+    // Event listener for form submission
+    $('#submit-query-type').on('click', function(event) {
+        event.preventDefault();
+        var queryTypes = [].slice.call(document.getElementById('query-type'));
+        var selctedType = queryTypes.filter(child => {return child.selected;})[0].value;
+
+        if(selctedType === "default"){
+            alert("Please select a card type");
+        } else {
+            getQueryPage(selctedType);
         }
+    })
+});
+
+function getQueryPage(queryType){
+    console.log("here");
+    $.ajax({
+        url: '/query-page',
+        method: 'POST',
+        data: queryType,
+        processData: false,
+        contentType: false,
+        success: function(response) {
+            // Handle the response here
+            $(".filters").removeClass("d-none");
+            // updateChart(response.result)
+            $("#selects").removeClass("d-none");
+            var s = ''
+            for (var i = 0; i < response["years"].length; i++) {  
+                var value = response["years"][i];
+                s += '<option value="' + value + '">' + value + '</option>';  
+            }
+            $("#value1_q1").append(s);
+
+            var s = ''
+            for (var i = 0; i < response["years"].length; i++) {  
+                var value = response["years"][i];
+                s += '<option value="' + value + '">' + value + '</option>'; 
+            }
+            $("#value2_q1").append(s);
+
+            var s = ''
+            for (var i = 0; i < response["final_country"].length; i++) {  
+                var value = response["final_country"][i];
+                s += '<option value="' + value + '">' + value + '</option>'; 
+            }
+            $("#value3_q1").append(s);
+            
+            $("#q1Form").attr("name", queryType);
+        },
+        error: (functionError => {
+            console.log(functionError);
+        })
     });
 }

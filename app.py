@@ -297,10 +297,10 @@ def assign_table_names(query_type):
 
 @app.route('/query-page', methods=['GET', 'POST'])
 def query_page():
+    htmlPage = 1
     if request.method == 'POST':
         # Process the selected query and parameters
         query_type = request.get_data(as_text=True)
-        htmlPage = 1
         # Additional parameters based on the selected query
         if query_type == "education_gdp_ratio":
             print("entered: " + query_type)
@@ -394,7 +394,7 @@ def query_page():
         # query_results = handle_query(query_type, **params)
         # return jsonify(query_results)
 
-    return render_template('Q'+ htmlPage +'.html')
+    return render_template('Q'+ str(htmlPage) +'.html')
 
 def get_years():
     db = get_db()

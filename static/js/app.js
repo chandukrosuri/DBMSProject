@@ -99,6 +99,11 @@ function updateChart(data) {
                 x: {
                     type: 'linear',
                     position: 'bottom',
+                    ticks: {
+                        callback: function (value) {
+                            return Number.isInteger(value) ? value : '';
+                        },
+                    },
                     title: {
                         display: true,
                         text: 'Year',

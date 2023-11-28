@@ -109,6 +109,17 @@ def assign_table_names(query_type):
         return ['rvarki.GOVERNMENT_DEBT','rvarki.GOVERNMENT_EXPENDITURE']
     elif query_type == "medical_contribution":
         return ["rvarki.NUMBER_OF_MEDICALDOCTORS","rvarki.NUMBER_OF_DENTISTS"]
+    elif query_type == "obesity_change":
+        return ["rvarki.obesity","rvarki.continent"]
+    elif query_type == "suicide_mean":
+        return ["rvarki.suicide_rate",None]
+    elif query_type == "happiness_change":
+        return ["rvarki.happiness","rvarki.continent"]
+    elif query_type == "pollution_rank":
+        return ["RVARKI.DEATHS_DUETO_AIRPOLLUTION",None]
+    
+    
+
     
 def get_available_countries(table_name):
     db = get_db()

@@ -174,6 +174,7 @@ def assign_sql_query(query_type):
         ON rvarki.gdp.countryname = rvarki.average_schooling_years.countryname 
         AND rvarki.gdp.year = rvarki.average_schooling_years.year 
         WHERE rvarki.gdp.countryname = :country 
+        AND rvarki.gdp.year BETWEEN :start_year AND :end_year 
         ORDER BY year
         """
         return query
@@ -213,6 +214,7 @@ def assign_sql_query(query_type):
 
 @app.route("/query-data", methods = ['POST'])
 def get_data():
+    print(request.form)
     value1_q1 = int(request.form.get('value1_q1'))
     value2_q1 = int(request.form.get('value2_q1'))
     value3_q1 = request.form.get('value3_q1')
@@ -223,10 +225,9 @@ def get_data():
     db = get_db()
     cursor = db.cursor()
     if query_type == "education_gdp_ratio":
-        print("val1: "+str(value1_q1)+" val2: "+str(value2_q1)+" val3: "+value3_q1+" type: "+query_type)
         query = assign_sql_query(query_type)
         # print(query)
-        cursor.execute(query,{'country': value3_q1})
+        cursor.execute(query,{'country': value3_q1, 'start_year': value1_q1, 'end_year': value2_q1})
         result = cursor.fetchall()
         cursor.close()
 
@@ -241,7 +242,7 @@ def get_data():
     elif query_type == "debt_expen_ratio":
         query = assign_sql_query(query_type)
         print(query)
-        cursor.execute(query,{'country': country})
+        cursor.execute(query,{'country': value3_q1, 'start_year': value1_q1, 'end_year': value2_q1})
         result = cursor.fetchall()
         cursor.close()
         print(result)

@@ -18,12 +18,23 @@ function toggleDropdown() {
   // Event listener for form submission
 $(function() {    
     $('#submitForm').on('click', function(event) {
-        console.log("event: ", event);
         event.preventDefault();
-        var form = document.getElementById('q1Form');
-        var formData = new FormData(form);
-        formData.append("query_type", form.name);
-        console.log("formDate: ", formData);
+        var value1 = $('#value1_q1').val();
+        var value2 = $('#value2_q1').val();
+        var value3 = $('#value3_q1').val();
+        var formName = $('q1Form').name;
+
+        // Do something with the values
+        console.log('Value from the first select:', value1);
+        console.log('Value from the second select:', value2);
+        console.log('List of values from the third select:', value3);
+
+        var formData = new FormData();
+        formData.append('value1_q1', value1);
+        formData.append('value2_q1', value2);
+        formData.append('value3_q1', JSON.stringify(value3));
+        formData.append("query_type", formName);
+        console.log("formData: ", formData);
 
         $.ajax({
             url: '/query-data',
@@ -49,6 +60,13 @@ $(function() {
 
 function updateChart(data) {
     console.log("response data: ", data[0].ratio);
+    const canvas = document.getElementById('myChart');
+
+    // Check if a Chart instance already exists
+    if (canvas.chart) {
+        // Destroy the existing Chart instance
+        canvas.chart.destroy();
+    }
     const ctx = document.getElementById('myChart');
 
     new Chart(ctx, {
@@ -59,7 +77,7 @@ function updateChart(data) {
                 label: 'ratio',
                 data: data.map(item => item.ratio),
                 borderWidth: 1,
-                borderColor: 'rgba(75, 192, 192, 1)',  // You can set the line color
+                borderColor: 'rgba(0, 0, 192, 1)',  // You can set the line color
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',  // You can set the fill color
             }]
         },

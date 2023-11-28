@@ -180,7 +180,7 @@ def assign_sql_query(query_type, num_countries):
         country_placeholders = ', '.join(f':country{i}' for i in range(1, num_countries + 1))
 
         query = f"""
-        SELECT rvarki.gdp.year, rvarki.gdp.gdp, rvarki.average_schooling_years.avg_yearsof_schooling 
+        SELECT rvarki.gdp.year, rvarki.gdp.countryname, rvarki.gdp.gdp, rvarki.average_schooling_years.avg_yearsof_schooling 
         FROM rvarki.gdp 
         JOIN rvarki.average_schooling_years 
         ON rvarki.gdp.countryname = rvarki.average_schooling_years.countryname 
@@ -231,7 +231,8 @@ def get_data():
     # Process the results to calculate the GDP/Education ratio
         final_data = [{
             'year': row[0],
-            'ratio': (row[1] / row[2]) if row[2] else None  # Ensure not to divide by zero
+            'country': row[1],
+            'ratio': (row[2] / row[3]) if row[3] else None  # Ensure not to divide by zero
         } for row in result]
         print(final_data)
         return jsonify(final_data)

@@ -59,7 +59,6 @@ $(function() {
     })
 });
 
-
 function updateChart(data) {
     console.log("response data: ", data[0].ratio);
     const canvas = document.getElementById('myChart');
@@ -69,33 +68,66 @@ function updateChart(data) {
         // Destroy the existing Chart instance
         canvas.chart.destroy();
     }
-    const ctx = document.getElementById('myChart');
 
-    new Chart(ctx, {
-        type: 'line',  // Change the type to 'line'
+    const brightColors = ['#FF5733', '#33FF57', '#5733FF', '#FF336E', '#33A7FF'];
+    const datasets = {};
+
+    // Prepare datasets for different countries
+    data.forEach(item => {
+        if (!datasets[item.country]) {
+            datasets[item.country] = {
+                label: item.country,
+                data: [],
+                borderColor: brightColors.pop(),
+                backgroundColor: 'rgba(0, 0, 0, 0)', // Set a transparent background
+                borderWidth: 2,
+                fill: false,
+            };
+        }
+        datasets[item.country].data.push({ x: item.year, y: item.ratio });
+    });
+
+    // Create a new Chart instance
+    const ctx = canvas.getContext('2d');
+    canvas.chart = new Chart(ctx, {
+        type: 'line',
         data: {
-            labels: data.map(item => item.year),
-            datasets: [{
-                label: 'ratio',
-                data: data.map(item => item.ratio),
-                borderWidth: 1,
-                borderColor: 'rgba(0, 0, 192, 1)',  // You can set the line color
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',  // You can set the fill color
-            }]
+            datasets: Object.values(datasets),
         },
         options: {
             scales: {
                 x: {
                     type: 'linear',
-                    position: 'bottom'
+                    position: 'bottom',
+                    title: {
+                        display: true,
+                        text: 'Year',
+                    },
                 },
                 y: {
-                    beginAtZero: true
-                }
-            }
-        }
+                    min: Math.min(...data.map(item => item.ratio)),
+                    title: {
+                        display: true,
+                        text: 'Ratio',
+                    },
+                },
+            },
+        },
     });
 }
+
+
+
+// Function to generate random colors
+function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
 
 
 $(document).ready(function() {

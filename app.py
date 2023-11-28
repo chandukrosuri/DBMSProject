@@ -26,9 +26,14 @@ def close_db(e=None):
 
 @app.route('/')
 def home():
-    # print(len(final_country),final_country)
-    # print(get_data())
-    # print(get_years())
+    query_type = "medical_contribution"
+    table1,table2 = assign_table_names(query_type)
+    country_debt = get_available_countries(table1)
+    country_expen = get_available_countries(table2)
+    final_country = get_common_attributes(country_debt,country_expen)
+    print(len(final_country),final_country)
+    print(get_data())
+    print(get_years())
     return 'Welcome to DBMS Project'
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -102,6 +107,8 @@ def assign_table_names(query_type):
         return ['rvarki.average_schooling_years','rvarki.gdp']
     elif query_type == "debt_expen_ratio":
         return ['rvarki.GOVERNMENT_DEBT','rvarki.GOVERNMENT_EXPENDITURE']
+    elif query_type == "medical_contribution":
+        return ["rvarki.NUMBER_OF_MEDICALDOCTORS","rvarki.NUMBER_OF_DENTISTS"]
     
 def get_available_countries(table_name):
     db = get_db()
@@ -192,6 +199,13 @@ def query_page():
         elif query_type == "pollution_rank":
             final_country = get_available_countries("RVARKI.DEATHS_DUETO_AIRPOLLUTION")
             return jsonify({'final_country': final_country , 'table_name': query_type})
+        
+        elif query_type == "medical_contribution":
+            table1,table2 = assign_table_names(query_type)
+            country_debt = get_available_countries(table1)
+            country_expen = get_available_countries(table2)
+            final_country = get_common_attributes(country_debt,country_expen)
+            return jsonify({'final_country': final_country , 'table_name': query_type})
         # Call a function to handle the query and generate results (e.g., data for the graph)
         # query_results = handle_query(query_type, **params)
         # return jsonify(query_results)
@@ -203,7 +217,7 @@ def get_years():
     cursor = db.cursor()
     # query_type = request.args.get('query_type')
     # country = request.args.get('country')
-    query_type = "pollution_rank"
+    query_type = "medical_contribution"
     country = "Italy"
     # table1,table2 = assign_table_names(query_type)
     # subq = assign_sql_query(query_type)
@@ -223,7 +237,7 @@ def get_years():
 def get_data():
     db = get_db()
     cursor = db.cursor()
-    query_type = "pollution_rank"
+    query_type = "medical_contribution"
     country = "Italy"
     # query_type = request.args.get('query_type')
     # country = request.args.get('country')
@@ -311,6 +325,20 @@ def get_data():
         final_data = [{
             'year': row[0],
             'rank': row[3],  # Ensure not to divide by zero
+        } for row in result]
+        print(final_data)
+        return jsonify(final_data)
+    
+    elif query_type == "medical_contribution":
+        query = assign_sql_query(query_type)
+        # print(query)
+        cursor.execute(query,{'country': country})
+        result = cursor.fetchall()
+        cursor.close()
+        # print(result)
+        final_data = [{
+            'year': row[0],
+            'contribution': row[4],  # Ensure not to divide by zero
         } for row in result]
         print(final_data)
         return jsonify(final_data)

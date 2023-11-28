@@ -145,3 +145,45 @@ def assign_sql_query(query_type):
         """
         return query
     
+    elif query_type == "medical_contribution":
+        query = """
+        WITH GlobalTotals AS (
+            SELECT 
+                d.year,
+                SUM(d.dentists) + SUM(m.medical_doctors) AS global_total
+            FROM 
+                rvarki.NUMBER_OF_DENTISTS d
+            JOIN 
+                rvarki.NUMBER_OF_MEDICALDOCTORS m ON d.countryname = m.countryname AND d.year = m.year
+            GROUP BY 
+                d.year
+        ),
+        CountryTotals AS (
+            SELECT 
+                d.year,
+                d.countryname,
+                SUM(d.dentists) + SUM(m.medical_doctors) AS country_total
+            FROM 
+                rvarki.NUMBER_OF_DENTISTS d
+            JOIN 
+                rvarki.NUMBER_OF_MEDICALDOCTORS m ON d.countryname = m.countryname AND d.year = m.year
+            WHERE
+                d.countryname = :country
+            GROUP BY 
+                d.year, d.countryname
+        )
+        SELECT 
+            ct.year,
+            ct.countryname,
+            ct.country_total,
+            gt.global_total,
+            (ct.country_total / gt.global_total) * 100 AS percent_contribution
+        FROM 
+            CountryTotals ct
+        JOIN 
+            GlobalTotals gt ON ct.year = gt.year
+        ORDER BY 
+            ct.year
+        """
+        return query
+    

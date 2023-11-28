@@ -11,3 +11,4 @@ oracledb==1.4.2
 pycparser==2.21
 python-dotenv==1.0.0
 Werkzeug==3.0.1
+nodejs==0.1.1

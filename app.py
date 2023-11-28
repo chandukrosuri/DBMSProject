@@ -4,6 +4,7 @@ import os
 import oracledb
 from dotenv import load_dotenv
 import hashlib
+import ast
 
 app = Flask(__name__)
 
@@ -173,16 +174,18 @@ def get_years(table1, table2):
 
 #     return render_template('Q1.html')
     
-def assign_sql_query(query_type):
+def assign_sql_query(query_type, num_countries):
     if query_type == "education_gdp_ratio":
         # query = f"select rvarki.gdp.year,rvarki.gdp.gdp,rvarki.average_schooling_years.avg_yearsof_schooling from rvarki.gdp join rvarki.average_schooling_years on rvarki.gdp.countryname=rvarki.average_schooling_years.countryname and rvarki.gdp.year=rvarki.average_schooling_years.year where rvarki.gdp.countryname = {country} order by year;"
-        query = """
+        country_placeholders = ', '.join(f':country{i}' for i in range(1, num_countries + 1))
+
+        query = f"""
         SELECT rvarki.gdp.year, rvarki.gdp.gdp, rvarki.average_schooling_years.avg_yearsof_schooling 
         FROM rvarki.gdp 
         JOIN rvarki.average_schooling_years 
         ON rvarki.gdp.countryname = rvarki.average_schooling_years.countryname 
         AND rvarki.gdp.year = rvarki.average_schooling_years.year 
-        WHERE rvarki.gdp.countryname = :country 
+        WHERE rvarki.gdp.countryname IN ({country_placeholders}) 
         AND rvarki.gdp.year BETWEEN :start_year AND :end_year 
         ORDER BY year
         """
@@ -194,7 +197,7 @@ def assign_sql_query(query_type):
         JOIN rvarki.GOVERNMENT_EXPENDITURE 
         ON rvarki.GOVERNMENT_DEBT.countryname = rvarki.GOVERNMENT_EXPENDITURE.countryname 
         AND rvarki.GOVERNMENT_DEBT.year = rvarki.GOVERNMENT_EXPENDITURE.year 
-        WHERE rvarki.GOVERNMENT_DEBT.countryname = :country
+        WHERE rvarki.GOVERNMENT_DEBT.countryname IN :country
         ORDER BY year
         """
         return query
@@ -204,17 +207,24 @@ def get_data():
     print(request.form)
     value1_q1 = int(request.form.get('value1_q1'))
     value2_q1 = int(request.form.get('value2_q1'))
-    value3_q1 = request.form.get('value3_q1')
+    country = ast.literal_eval(request.form.getlist('value3_q1')[0])
+    print(country)
     query_type = request.form.get('query_type')
-    print("qt: "+query_type)
-    print("bool: "+str(query_type == "education_gdp_ratio"))
+    # print("qt: "+query_type)
+    # print("bool: "+str(query_type == "education_gdp_ratio"))
     
     db = get_db()
     cursor = db.cursor()
     if query_type == "education_gdp_ratio":
-        query = assign_sql_query(query_type)
-        # print(query)
-        cursor.execute(query,{'country': value3_q1, 'start_year': value1_q1, 'end_year': value2_q1})
+        num_countries = len(country)
+        print("total countries: "+str(num_countries))
+        query = assign_sql_query(query_type, num_countries)
+        print(query)
+        bind_variables = {'start_year': value1_q1, 'end_year': value2_q1}
+        for i, country in enumerate(country, start=1):
+            bind_variables[f'country{i}'] = country
+
+        cursor.execute(query, bind_variables)
         result = cursor.fetchall()
         cursor.close()
 
@@ -228,17 +238,87 @@ def get_data():
     
     elif query_type == "debt_expen_ratio":
         query = assign_sql_query(query_type)
-        print(query)
-        cursor.execute(query,{'country': value3_q1, 'start_year': value1_q1, 'end_year': value2_q1})
+        # print(query)
+        cursor.execute(query,{'country': country})
         result = cursor.fetchall()
         cursor.close()
-        print(result)
+        # print(result)
     # Process the results to calculate the Debt/Expen ratio
         # for row in result:
         #     print(row[0],row[1],row[2])
         final_data = [{
             'year': row[0],
             'ratio': (row[1] / row[2]) if row[1] and row[2] else None  # Ensure not to divide by zero
+        } for row in result]
+        print(final_data)
+        return jsonify(final_data)
+    
+    elif query_type == "happiness_change":
+        query = assign_sql_query(query_type)
+        # print(query)
+        cursor.execute(query,{'continent': country})
+        result = cursor.fetchall()
+        cursor.close()
+        # print(result)
+        final_data = [{
+            'year': row[1],
+            'percentage_change': row[4],  # Ensure not to divide by zero
+        } for row in result]
+        # print(final_data)
+        return jsonify(final_data)
+    
+    elif query_type == "obesity_change":
+        query = assign_sql_query(query_type)
+        # print(query)
+        cursor.execute(query,{'continent': country})
+        result = cursor.fetchall()
+        cursor.close()
+        # print(result)
+        final_data = [{
+            'year': row[1],
+            'percentage_change': row[4],  # Ensure not to divide by zero
+        } for row in result]
+        print(final_data)
+        return jsonify(final_data)
+    
+    elif query_type == "suicide_mean":
+        query = assign_sql_query(query_type)
+        # print(query)
+        cursor.execute(query,{'country': country})
+        result = cursor.fetchall()
+        cursor.close()
+        # print(result)
+        final_data = [{
+            'year': row[0],
+            'mean_deviation': row[1],  # Ensure not to divide by zero
+        } for row in result]
+        print(final_data)
+        return jsonify(final_data)
+    
+    elif query_type == "pollution_rank":
+        query = assign_sql_query(query_type)
+        # print(query)
+        cursor.execute(query,{'country': country})
+        result = cursor.fetchall()
+        cursor.close()
+        # print(result)
+        final_data = [{
+            'year': row[0],
+            'rank': row[3],  # Ensure not to divide by zero
+        } for row in result]
+        print(final_data)
+        return jsonify(final_data)
+    
+    elif query_type == "medical_contribution":
+        query = assign_sql_query(query_type)
+        # print(query)
+        cursor.execute(query,{'country': country})
+        result = cursor.fetchall()
+        cursor.close()
+        # print(result)
+        final_data = [{
+            'year': row[0],
+            'contribution': row[4],  # Ensure not to divide by zero
         } for row in result]
         print(final_data)
         return jsonify(final_data)
@@ -396,136 +476,136 @@ def query_page():
 
     return render_template('Q'+ str(htmlPage) +'.html')
 
-def get_years():
-    db = get_db()
-    cursor = db.cursor()
-    # query_type = request.args.get('query_type')
-    # country = request.args.get('country')
-    query_type = "medical_contribution"
-    country = "Italy"
-    # table1,table2 = assign_table_names(query_type)
-    # subq = assign_sql_query(query_type)
-    # print(subq)
-    query = assign_sql_query(query_type)
-    # print(query)
-    cursor.execute(query, {'country': country})
-    result = cursor.fetchall()
-    cursor.close()
-    if result:
-        years = [row[0] for row in result]
-        print(years)
-        return jsonify({'years_range': (min(years), max(years))})
-    else:
-        return jsonify({'error': 'No data found for the selected country'})
+# def get_years():
+#     db = get_db()
+#     cursor = db.cursor()
+#     # query_type = request.args.get('query_type')
+#     # country = request.args.get('country')
+#     query_type = "medical_contribution"
+#     country = "Italy"
+#     # table1,table2 = assign_table_names(query_type)
+#     # subq = assign_sql_query(query_type)
+#     # print(subq)
+#     query = assign_sql_query(query_type)
+#     # print(query)
+#     cursor.execute(query, {'country': country})
+#     result = cursor.fetchall()
+#     cursor.close()
+#     if result:
+#         years = [row[0] for row in result]
+#         print(years)
+#         return jsonify({'years_range': (min(years), max(years))})
+#     else:
+#         return jsonify({'error': 'No data found for the selected country'})
 
-def get_data():
-    db = get_db()
-    cursor = db.cursor()
-    query_type = "medical_contribution"
-    country = "Italy"
-    # query_type = request.args.get('query_type')
-    # country = request.args.get('country')
-    if query_type == "education_gdp_ratio":
-        query = assign_sql_query(query_type)
-        # print(query)
-        cursor.execute(query,{'country': country})
-        result = cursor.fetchall()
-        cursor.close()
+# def get_data():
+#     db = get_db()
+#     cursor = db.cursor()
+#     query_type = "medical_contribution"
+#     country = "Italy"
+#     # query_type = request.args.get('query_type')
+#     # country = request.args.get('country')
+#     if query_type == "education_gdp_ratio":
+#         query = assign_sql_query(query_type)
+#         # print(query)
+#         cursor.execute(query,{'country': country})
+#         result = cursor.fetchall()
+#         cursor.close()
 
-    # Process the results to calculate the GDP/Education ratio
-        final_data = [{
-            'year': row[0],
-            'ratio': (row[1] / row[2]) if row[2] else None  # Ensure not to divide by zero
-        } for row in result]
-        print(final_data)
-        return jsonify(final_data)
+#     # Process the results to calculate the GDP/Education ratio
+#         final_data = [{
+#             'year': row[0],
+#             'ratio': (row[1] / row[2]) if row[2] else None  # Ensure not to divide by zero
+#         } for row in result]
+#         print(final_data)
+#         return jsonify(final_data)
     
-    elif query_type == "debt_expen_ratio":
-        query = assign_sql_query(query_type)
-        # print(query)
-        cursor.execute(query,{'country': country})
-        result = cursor.fetchall()
-        cursor.close()
-        # print(result)
-    # Process the results to calculate the Debt/Expen ratio
-        # for row in result:
-        #     print(row[0],row[1],row[2])
-        final_data = [{
-            'year': row[0],
-            'ratio': (row[1] / row[2]) if row[1] and row[2] else None  # Ensure not to divide by zero
-        } for row in result]
-        print(final_data)
-        return jsonify(final_data)
+#     elif query_type == "debt_expen_ratio":
+#         query = assign_sql_query(query_type)
+#         # print(query)
+#         cursor.execute(query,{'country': country})
+#         result = cursor.fetchall()
+#         cursor.close()
+#         # print(result)
+#     # Process the results to calculate the Debt/Expen ratio
+#         # for row in result:
+#         #     print(row[0],row[1],row[2])
+#         final_data = [{
+#             'year': row[0],
+#             'ratio': (row[1] / row[2]) if row[1] and row[2] else None  # Ensure not to divide by zero
+#         } for row in result]
+#         print(final_data)
+#         return jsonify(final_data)
     
-    elif query_type == "happiness_change":
-        query = assign_sql_query(query_type)
-        # print(query)
-        cursor.execute(query,{'continent': country})
-        result = cursor.fetchall()
-        cursor.close()
-        # print(result)
-        final_data = [{
-            'year': row[1],
-            'percentage_change': row[4],  # Ensure not to divide by zero
-        } for row in result]
-        # print(final_data)
-        return jsonify(final_data)
+#     elif query_type == "happiness_change":
+#         query = assign_sql_query(query_type)
+#         # print(query)
+#         cursor.execute(query,{'continent': country})
+#         result = cursor.fetchall()
+#         cursor.close()
+#         # print(result)
+#         final_data = [{
+#             'year': row[1],
+#             'percentage_change': row[4],  # Ensure not to divide by zero
+#         } for row in result]
+#         # print(final_data)
+#         return jsonify(final_data)
     
-    elif query_type == "obesity_change":
-        query = assign_sql_query(query_type)
-        # print(query)
-        cursor.execute(query,{'continent': country})
-        result = cursor.fetchall()
-        cursor.close()
-        # print(result)
-        final_data = [{
-            'year': row[1],
-            'percentage_change': row[4],  # Ensure not to divide by zero
-        } for row in result]
-        print(final_data)
-        return jsonify(final_data)
+#     elif query_type == "obesity_change":
+#         query = assign_sql_query(query_type)
+#         # print(query)
+#         cursor.execute(query,{'continent': country})
+#         result = cursor.fetchall()
+#         cursor.close()
+#         # print(result)
+#         final_data = [{
+#             'year': row[1],
+#             'percentage_change': row[4],  # Ensure not to divide by zero
+#         } for row in result]
+#         print(final_data)
+#         return jsonify(final_data)
     
-    elif query_type == "suicide_mean":
-        query = assign_sql_query(query_type)
-        # print(query)
-        cursor.execute(query,{'country': country})
-        result = cursor.fetchall()
-        cursor.close()
-        # print(result)
-        final_data = [{
-            'year': row[0],
-            'mean_deviation': row[1],  # Ensure not to divide by zero
-        } for row in result]
-        print(final_data)
-        return jsonify(final_data)
+#     elif query_type == "suicide_mean":
+#         query = assign_sql_query(query_type)
+#         # print(query)
+#         cursor.execute(query,{'country': country})
+#         result = cursor.fetchall()
+#         cursor.close()
+#         # print(result)
+#         final_data = [{
+#             'year': row[0],
+#             'mean_deviation': row[1],  # Ensure not to divide by zero
+#         } for row in result]
+#         print(final_data)
+#         return jsonify(final_data)
     
-    elif query_type == "pollution_rank":
-        query = assign_sql_query(query_type)
-        # print(query)
-        cursor.execute(query,{'country': country})
-        result = cursor.fetchall()
-        cursor.close()
-        # print(result)
-        final_data = [{
-            'year': row[0],
-            'rank': row[3],  # Ensure not to divide by zero
-        } for row in result]
-        print(final_data)
-        return jsonify(final_data)
+#     elif query_type == "pollution_rank":
+#         query = assign_sql_query(query_type)
+#         # print(query)
+#         cursor.execute(query,{'country': country})
+#         result = cursor.fetchall()
+#         cursor.close()
+#         # print(result)
+#         final_data = [{
+#             'year': row[0],
+#             'rank': row[3],  # Ensure not to divide by zero
+#         } for row in result]
+#         print(final_data)
+#         return jsonify(final_data)
     
-    elif query_type == "medical_contribution":
-        query = assign_sql_query(query_type)
-        # print(query)
-        cursor.execute(query,{'country': country})
-        result = cursor.fetchall()
-        cursor.close()
-        # print(result)
-        final_data = [{
-            'year': row[0],
-            'contribution': row[4],  # Ensure not to divide by zero
-        } for row in result]
-        print(final_data)
-        return jsonify(final_data)
+#     elif query_type == "medical_contribution":
+#         query = assign_sql_query(query_type)
+#         # print(query)
+#         cursor.execute(query,{'country': country})
+#         result = cursor.fetchall()
+#         cursor.close()
+#         # print(result)
+#         final_data = [{
+#             'year': row[0],
+#             'contribution': row[4],  # Ensure not to divide by zero
+#         } for row in result]
+#         print(final_data)
+#         return jsonify(final_data)
 
 
 if __name__ == '__main__':

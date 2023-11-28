@@ -22,19 +22,21 @@ $(function() {
         var value1 = $('#value1_q1').val();
         var value2 = $('#value2_q1').val();
         var value3 = $('#value3_q1').val();
-        var formName = $('q1Form').name;
+        var form = document.getElementById("q1Form");
+        var formName = form.name;
+
 
         // Do something with the values
         console.log('Value from the first select:', value1);
         console.log('Value from the second select:', value2);
         console.log('List of values from the third select:', value3);
+        console.log('formName: ', formName);
 
         var formData = new FormData();
         formData.append('value1_q1', value1);
         formData.append('value2_q1', value2);
         formData.append('value3_q1', JSON.stringify(value3));
         formData.append("query_type", formName);
-        console.log("formData: ", formData);
 
         $.ajax({
             url: '/query-data',

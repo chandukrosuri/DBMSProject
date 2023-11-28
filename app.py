@@ -143,36 +143,6 @@ def get_years(table1, table2):
     # print("t2.years: " + str(arr2))
     print("common: "+str(set(arr1) & set(arr2)))
     return set(arr1) & set(arr2)  # Returns an array with years in ascending order
-
-# @app.route('/query-page', methods=['POST', 'GET'])
-# def query_page():
-#     if request.method == 'POST':
-#         # Process the selected query and parameters
-#         print("query type: "+request.get_data(as_text=True))
-#         query_type = request.get_data(as_text=True)
-#         # Additional parameters based on the selected query
-#         if query_type == "education_gdp_ratio":
-#             print("entered: " + query_type)
-#             country_education = get_available_countries('rvarki.average_schooling_years')
-#             country_gpd = get_available_countries('rvarki.gdp')
-#             final_country = get_common_attributes(country_education,country_gpd)
-#             years = get_years('rvarki.average_schooling_years', 'rvarki.gdp')
-#             print("years: "+str(years))
-#             return jsonify({'final_country': list(final_country) , 'table_name': query_type, 'years': list(sorted(years))})      
-
-#         elif query_type == "debt_expen_ratio":
-#             print("entered: " + query_type)
-#             table1,table2 = assign_table_names(query_type)
-#             country_debt = get_available_countries(table1)
-#             country_expen = get_available_countries(table2)
-#             final_country = get_common_attributes(country_debt,country_expen)
-#             return jsonify({'final_country': final_country , 'table_name': query_type})   
-
-#         # Call a function to handle the query and generate results (e.g., data for the graph)
-#         # query_results = handle_query(query_type, **params)
-#         # return jsonify(query_results)
-
-#     return render_template('Q1.html')
     
 def assign_sql_query(query_type, num_countries):
     if query_type == "education_gdp_ratio":
@@ -217,9 +187,7 @@ def get_data():
     cursor = db.cursor()
     if query_type == "education_gdp_ratio":
         num_countries = len(country)
-        print("total countries: "+str(num_countries))
         query = assign_sql_query(query_type, num_countries)
-        print(query)
         bind_variables = {'start_year': value1_q1, 'end_year': value2_q1}
         for i, country in enumerate(country, start=1):
             bind_variables[f'country{i}'] = country
@@ -234,7 +202,6 @@ def get_data():
             'country': row[1],
             'ratio': (row[2] / row[3]) if row[3] else None  # Ensure not to divide by zero
         } for row in result]
-        print(final_data)
         return jsonify(final_data)
     
     elif query_type == "debt_expen_ratio":
@@ -368,12 +335,6 @@ def logout():
     return logout()
 def get_common_attributes(arr1,arr2):
         return set(arr1).intersection(set(arr2))
-
-def assign_table_names(query_type):
-    if query_type == "education_gdp_ratio":
-        return ['rvarki.average_schooling_years','rvarki.gdp']
-    elif query_type == "debt_expen_ratio":
-        return ['rvarki.GOVERNMENT_DEBT','rvarki.GOVERNMENT_EXPENDITURE']
     
 
 @app.route('/query-page', methods=['GET', 'POST'])
@@ -389,7 +350,6 @@ def query_page():
             country_gpd = get_available_countries('rvarki.gdp')
             final_country = get_common_attributes(country_education,country_gpd)
             years = get_years('rvarki.average_schooling_years', 'rvarki.gdp')
-            print("years: "+str(years))
             htmlPage = 1
             return jsonify({'final_country': list(final_country) , 'table_name': query_type, 'years': list(sorted(years))})      
 
@@ -398,6 +358,7 @@ def query_page():
             country_debt = get_available_countries(table1)
             country_expen = get_available_countries(table2)
             final_country = get_common_attributes(country_debt,country_expen)
+            years = get_years('rvarki.average_schooling_years', 'rvarki.gdp')
             htmlPage = 1
             return jsonify({'final_country': final_country , 'table_name': query_type})
         

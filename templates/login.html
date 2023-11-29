@@ -4,10 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='css/query.css') }}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" crossorigin="anonymous">
 </head>
 <body>
-    <div class="container">
+    <!-- Fixed Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top"> <!-- Assuming you want a dark navbar -->
+        <div class="container">
+            <a class="navbar-brand" href="/">Dashboard</a>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container" style="padding-top: 80px;"> <!-- Added padding-top to make space for the fixed navbar -->
         <h2 class="my-4">Login</h2>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -31,6 +40,6 @@
             Don't have an account? <a href="{{ url_for('register') }}">Register Now</a>
         </div>
     </div>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusv

@@ -49,7 +49,7 @@ def home():
         sum += res[0]
     sum = '{:,}'.format(sum)
     number_of_tuples = sum
-    return render_template('userDashboard.html',number_of_tuples=number_of_tuples,number_of_tables=number_of_tables)
+    return render_template('home.html',number_of_tuples=number_of_tuples,number_of_tables=number_of_tables)
 
 
 @app.route('/login', methods=['GET', 'POST'])

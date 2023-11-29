@@ -220,7 +220,7 @@ function enableHeatMapFilters(queryType){
         contentType: false,
         success: function(response){
             console.log("heatmap: ",response['years']);
-            var s = ''
+            var s = '';
             for (var i = 0; i < response["years"].length; i++) {  
                 var value = response["years"][i];
                 s += '<option value="' + value + '">' + value + '</option>';  
@@ -233,6 +233,15 @@ function enableHeatMapFilters(queryType){
         })
     })
 }
+
+$(function() {    
+    $('#generate').on('click', function(event) {
+        event.preventDefault();
+        var value1 = $('#map-year').val();
+        var form = document.getElementById("q1Form");
+        var formName = form.name;
+    });
+});
 
 function getLabels(queryType) {
     switch (queryType) {
@@ -270,18 +279,23 @@ function getColorForDataValue(dataValue, maxValue) {
     return ["hsl(", hue, ",100%,50%)"].join("");
 }
 
-function initializeMap() {
+function initializeMap(queryType, year) {
     console.log("here initializeMap")
     $("#map").removeClass("d-none");
     var map = L.map('map').setView([20, 0], 2); // World view
     // Fetch the max data value first
-    fetch('/api/max_value')
+    fetch('/api/max_value?'+ new URLSearchParams({
+        'queryType': queryType,
+        'year': year,
+    }))
+
     .then(response => response.json())
     .then(response => {
         const maxValue = response.max_value;
 
         // Then fetch the actual data
-        fetch('/api/data')
+        var url1 = ('/api/data').concat(queryType);
+        fetch(url1)
         .then(response => response.json())
         .then(data => {
             // Fetch the GeoJSON

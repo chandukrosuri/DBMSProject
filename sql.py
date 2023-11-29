@@ -182,7 +182,6 @@ def assign_sql_query(query_type, num_countries):
                 rvarki.NUMBER_OF_MEDICALDOCTORS m ON d.countryname = m.countryname AND d.year = m.year
             WHERE
                 d.countryname IN ({country_placeholders})
-                d.countryname = ({country_placeholders}) 
             GROUP BY 
                 d.year, d.countryname
         )
@@ -198,7 +197,6 @@ def assign_sql_query(query_type, num_countries):
             GlobalTotals gt ON ct.year = gt.year
         WHERE
             ct.year BETWEEN :start_year AND :end_year
-        WHERE ct.year BETWEEN :start_year and :end_year
         ORDER BY 
             ct.year
         """

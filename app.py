@@ -273,17 +273,21 @@ def get_data():
         return jsonify(final_data)
     
     elif query_type == "pollution_rank":
-        query = assign_sql_query(query_type)
-        # print(query)
-        cursor.execute(query,{'country': country})
+        num_countries = len(country)
+        query = assign_sql_query(query_type, num_countries)
+        print(query)
+        bind_variables = {'start_year': value1_q1, 'end_year': value2_q1}
+        for i, country in enumerate(country, start=1):
+            bind_variables[f'country{i}'] = country
+        cursor.execute(query,bind_variables)
         result = cursor.fetchall()
         cursor.close()
-        # print(result)
+        print(result)
         final_data = [{
             'year': row[0],
-            'rank': row[3],  # Ensure not to divide by zero
+            'country': row[1],
+            'ratio': row[3],  # Ensure not to divide by zero
         } for row in result]
-        print(final_data)
         return jsonify(final_data)
     
     elif query_type == "medical_contribution":
@@ -431,12 +435,13 @@ def query_page(page_number):
             htmlPage = 3
             final_country = get_available_countries("rvarki.suicide_rate")
             years = get_year('rvarki.suicide_rate')
-            return jsonify({'final_country': final_country , 'table_name': query_type, 'years': list(sorted(years))})  
+            return jsonify({'final_country': list(sorted(final_country)) , 'table_name': query_type, 'years': list(sorted(years))})  
         
         elif query_type == "pollution_rank":
             htmlPage = 4
             final_country = get_available_countries("RVARKI.DEATHS_DUETO_AIRPOLLUTION")
-            return jsonify({'final_country': final_country , 'table_name': query_type})
+            years = get_year('RVARKI.DEATHS_DUETO_AIRPOLLUTION')
+            return jsonify({'final_country': list(sorted(final_country)) , 'table_name': query_type, 'years': list(sorted(years))})
         
         elif query_type == "medical_contribution":
             htmlPage = 5

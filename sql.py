@@ -133,7 +133,7 @@ def assign_sql_query(query_type, num_countries):
         return query
     
     elif query_type == "pollution_rank":
-        query = """
+        query = f"""
         WITH RankedData AS (
             SELECT 
                 YEAR,
@@ -151,7 +151,8 @@ def assign_sql_query(query_type, num_countries):
         FROM 
             RankedData
         WHERE 
-            COUNTRYNAME = :country
+            COUNTRYNAME IN ({country_placeholders})
+            AND YEAR BETWEEN :start_year AND :end_year
         ORDER BY 
             YEAR
         """

@@ -240,6 +240,7 @@ $(function() {
         var value1 = $('#map-year').val();
         var form = document.getElementById("q1Form");
         var formName = form.name;
+        initializeMap(formName, value1);
     });
 });
 
@@ -289,7 +290,10 @@ function initializeMap(queryType, year) {
         'year': year,
     }))
 
-    .then(response => response.json())
+    .then(response => {
+        console.log("heat res: ", response);
+        response.json();
+    })
     .then(response => {
         const maxValue = response.max_value;
 

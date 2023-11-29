@@ -5,7 +5,7 @@ def assign_sql_query(query_type, num_countries):
         # query = f"select rvarki.gdp.year,rvarki.gdp.gdp,rvarki.average_schooling_years.avg_yearsof_schooling from rvarki.gdp join rvarki.average_schooling_years on rvarki.gdp.countryname=rvarki.average_schooling_years.countryname and rvarki.gdp.year=rvarki.average_schooling_years.year where rvarki.gdp.countryname = {country} order by year;"
 
         query = f"""
-        SELECT rvarki.gdp.year, rvarki.gdp.countryname, rvarki.gdp.gdp, rvarki.average_schooling_years.avg_yearsof_schooling 
+        SELECT rvarki.gdp.year, rvarki.gdp.countryname, (rvarki.gdp.gdp/100000000) as gdp, rvarki.average_schooling_years.avg_yearsof_schooling 
         FROM rvarki.gdp 
         JOIN rvarki.average_schooling_years 
         ON rvarki.gdp.countryname = rvarki.average_schooling_years.countryname 
@@ -159,7 +159,7 @@ def assign_sql_query(query_type, num_countries):
         return query
     
     elif query_type == "medical_contribution":
-        query = """
+        query = f"""
         WITH GlobalTotals AS (
             SELECT 
                 d.year,
@@ -181,7 +181,7 @@ def assign_sql_query(query_type, num_countries):
             JOIN 
                 rvarki.NUMBER_OF_MEDICALDOCTORS m ON d.countryname = m.countryname AND d.year = m.year
             WHERE
-                d.countryname = :country
+                d.countryname IN ({country_placeholders})
             GROUP BY 
                 d.year, d.countryname
         )
@@ -195,6 +195,8 @@ def assign_sql_query(query_type, num_countries):
             CountryTotals ct
         JOIN 
             GlobalTotals gt ON ct.year = gt.year
+        WHERE
+            ct.year BETWEEN :start_year AND :end_year
         ORDER BY 
             ct.year
         """

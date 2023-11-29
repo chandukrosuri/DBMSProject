@@ -116,12 +116,6 @@ def register():
             return redirect(url_for('login'))
     return render_template('register.html')
 
-@app.route('/logout', methods = ['GET'])
-def logout():
-    session.pop('logged_in', None)  # Remove 'logged_in' from session
-    flash('You have been logged out.', 'success')
-    return redirect(url_for('login'))
-
 def get_common_attributes(arr1,arr2):
         return set(arr1).intersection(set(arr2))
 
@@ -139,6 +133,8 @@ def heat_data():
 def assign_table_names(query_type):
     if query_type == "education_gdp_ratio":
         return ['rvarki.average_schooling_years','rvarki.gdp']
+    elif  query_type == "debt_expen_ratio":
+        return ['rvarki.government_debt', 'rvarki.government_expenditure']
     elif query_type == "debt_expen_ratio":
         return ['rvarki.GOVERNMENT_DEBT','rvarki.GOVERNMENT_EXPENDITURE']
     elif query_type == "medical_contribution":
@@ -209,6 +205,7 @@ def get_data():
     if query_type == "education_gdp_ratio":
         num_countries = len(country)
         query = assign_sql_query(query_type, num_countries)
+        # print(query)
         bind_variables = {'start_year': value1_q1, 'end_year': value2_q1}
         for i, country in enumerate(country, start=1):
             bind_variables[f'country{i}'] = country
@@ -226,17 +223,23 @@ def get_data():
         return jsonify(final_data)
     
     elif query_type == "debt_expen_ratio":
-        query = assign_sql_query(query_type)
+        num_countries = len(country)
+        print("num_coun:" + str(num_countries))
+        query = assign_sql_query(query_type, num_countries)
         # print(query)
-        cursor.execute(query,{'country': country})
+        bind_variables = {'start_year': value1_q1, 'end_year': value2_q1}
+        for i, country in enumerate(country, start=1):
+            bind_variables[f'country{i}'] = country
+        print(bind_variables)
+        cursor.execute(query, bind_variables)
         result = cursor.fetchall()
         cursor.close()
         print(result)
         final_data = [{
             'year': row[0],
-            'ratio': (row[1] / row[2]) if row[1] and row[2] else None  # Ensure not to divide by zero
+            'country': row[1],
+            'ratio': (row[2] / row[3]) if row[3] else None  # Ensure not to divide by zero
         } for row in result]
-        print(final_data)
         return jsonify(final_data)
     
     elif query_type == "happiness_change":
@@ -315,15 +318,20 @@ def get_data():
         return jsonify(final_data)
     
     elif query_type == "medical_contribution":
-        query = assign_sql_query(query_type)
-        # print(query)
-        cursor.execute(query,{'country': country})
+        num_countries = len(country)
+        query = assign_sql_query(query_type, num_countries)
+        print(query)
+        bind_variables = {'start_year': value1_q1, 'end_year': value2_q1}
+        for i, country in enumerate(country, start=1):
+            bind_variables[f'country{i}'] = country
+        cursor.execute(query,bind_variables)
         result = cursor.fetchall()
         cursor.close()
         # print(result)
         final_data = [{
+            'country': row[1],
             'year': row[0],
-            'contribution': row[4],  # Ensure not to divide by zero
+            'ratio': row[4],  # Ensure not to divide by zero
         } for row in result]
         print(final_data)
         return jsonify(final_data)
@@ -367,6 +375,9 @@ def feedbackPage():
         rating = request.form.get('rating')
     return render_template('feedback.html', pageName = "feedback")
 
+@app.route('/logout', methods = ['GET'])
+def logout():
+    return logout()
 def get_common_attributes(arr1,arr2):
         return set(arr1).intersection(set(arr2))
     
@@ -467,10 +478,11 @@ def query_page(page_number):
         elif query_type == "medical_contribution":
             htmlPage = 5
             table1,table2 = assign_table_names(query_type)
-            country_debt = get_available_countries(table1)
-            country_expen = get_available_countries(table2)
-            final_country = get_common_attributes(country_debt,country_expen)
-            return jsonify({'final_country': final_country , 'table_name': query_type})
+            country_doctors = get_available_countries(table1)
+            country_dentists = get_available_countries(table2)
+            final_country = get_common_attributes(country_doctors,country_dentists)
+            years = get_years(table1, table2)
+            return jsonify({'final_country': list(sorted(final_country)) , 'table_name': query_type, 'years': list(sorted(years))})
         # Call a function to handle the query and generate results (e.g., data for the graph)
         # query_results = handle_query(query_type, **params)
         # return jsonify(query_results)

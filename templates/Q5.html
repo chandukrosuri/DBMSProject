@@ -1,5 +1,3 @@
-<!-- templates/Q1.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,28 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
     <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/query.css') }}">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-
 </head>
 <body>
-
     <div class="navbar">
-        <!-- Center-aligned: Dashboard -->
-        
         <div class="nav-left">
-           <!-- <div class="dropdown">
-                <div class="menu-icon" tabindex="0" onclick="toggleDropdown()">&#9776;</div>
-                <div class="dropdown-content" id="dropdownContent">
-                    <a href="/Q1">Q1</a>
-                    <a href="/Q2">Q2</a>
-                    <a href="/Q3">Q3</a>
-                    <a href="/Q4">Q4</a>
-                    <a href="/Q5">Q5</a>
-                </div>
-            </div>  -->
             <a href="/">Dashboard</a>
+            <select name="query-select" id="query-select" onchange="navigateToPage(this.value)" required>
+                <option value = 5>Analysis - 5 </option>
+                <option value = 1>Analysis - 1 </option>
+                <option value = 2>Analysis - 2 </option>
+                <option value = 3>Analysis - 3 </option>
+                <option value = 4>Analysis - 4 </option>
+            </select>
         </div>
 
         <!-- Right-aligned: Feedback, Profile, Logout -->
@@ -38,35 +30,42 @@
             <a href="/logout">Logout</a>
         </div>
     </div>
-
     <div class = "content">
-        <h2>Form for Q5</h2>
-        <form action="/process_q1" method="get" onsubmit="toggleResultDiv(); return false;">
-            <!-- Form fields for Q1 -->
-            <label for="value1_q1">Select the time range</label>
-            <select type="number" name="value1_q1" id="value1_q1" required>
-                {% for year in range(1900, 2024) %}
-                    <option value="{{ year }}">{{ year }}</option>
-                {% endfor %}
+        <div class = "query-selector" name = "queryselection" id = "querySelector">
+            <label for = "query-type">Select one of the topics to analyze:</label>
+            <select name="query-type" id="query-type" required>
+                <option value="medical_contribution-5">Medical Contribution </option>
             </select>
+            <button type = "button" class = "btn btn-info" id = "submit-query-type">submit</button>
+        </div>
+        <div class = "filters d-none">
+            <label for = "q1Form">Select filters to view the trend analysis</label>
+            <form id = "q1Form">
+                <!-- Form fields for Q1 -->
+                <div class="d-none" id = "selects">
+                    <select type="number" name="value1_q1" id="value1_q1" required>
+                        <option value="-1">--</option>
+                    </select>
+                    <select type="number" name="value2_q1" id="value2_q1" required>
+                        <option value="-1">--</option>
+                    </select>
+                    <select type="string" name="value3_q1" id="value3_q1" required multiple>
+                        <option value="-1">--</option>
+                    </select>
+                    <button type="submit" id = "submitForm">Analyze</button>
+                </div>
+            </form>
 
-            <select type="number" name="value2_q1" id="value2_q1" required>
-                {% for year in range(1900, 2024) %}
-                    <option value="{{ year }}">{{ year }}</option>
-                {% endfor %}
-            </select>
-
-            <button type="submit">Submit Q1</button>
-        </form>
-
-        <!-- Result container -->
-        <div class="result-container" id="result-container">
-            <h3>Result:</h3>
-            <p>This is the result for Q1.</p>
+            <!-- Result container -->
+            <div class="result-container d-none" id="result-container">
+                    <canvas id="myChart"></canvas>
+            </div>
         </div>
     </div>
 </div>
-<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='css/query.css') }}">
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type = "text/javascript" src="{{ url_for('static',filename='js/app.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type = "text/javascript" src="{{ url_for('static',filename='js/app.js') }}"></script>
 </body>
 </html>

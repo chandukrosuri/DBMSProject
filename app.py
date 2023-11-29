@@ -143,46 +143,24 @@ def get_years(table1, table2):
     cursor.execute(query_2)
     table_2_years = cursor.fetchall()
     cursor.close()
-    arr1 = []
-    for _ in table_1_years:
-        arr1.append(_[0])
-    # print("t1.years: " + str(arr1))
-    arr2 = []
-    for _ in table_2_years:
-        arr2.append(_[0])
-    # print("t2.years: " + str(arr2))
-    print("common: "+str(set(arr1) & set(arr2)))
-    return set(arr1) & set(arr2)  # Returns an array with years in ascending order
-    
-def assign_sql_query(query_type, num_countries):
-    country_placeholders = ', '.join(f':country{i}' for i in range(1, num_countries + 1))
 
-    if query_type == "education_gdp_ratio":
-        # query = f"select rvarki.gdp.year,rvarki.gdp.gdp,rvarki.average_schooling_years.avg_yearsof_schooling from rvarki.gdp join rvarki.average_schooling_years on rvarki.gdp.countryname=rvarki.average_schooling_years.countryname and rvarki.gdp.year=rvarki.average_schooling_years.year where rvarki.gdp.countryname = {country} order by year;"
+    all_years = [year for (year,) in table_1_years + table_2_years]
+    minyear = min(all_years)
+    maxyear = max(all_years)
 
-        query = f"""
-        SELECT rvarki.gdp.year, rvarki.gdp.countryname, rvarki.gdp.gdp, rvarki.average_schooling_years.avg_yearsof_schooling 
-        FROM rvarki.gdp 
-        JOIN rvarki.average_schooling_years 
-        ON rvarki.gdp.countryname = rvarki.average_schooling_years.countryname 
-        AND rvarki.gdp.year = rvarki.average_schooling_years.year 
-        WHERE rvarki.gdp.countryname IN ({country_placeholders}) 
-        AND rvarki.gdp.year BETWEEN :start_year AND :end_year 
-        ORDER BY year
-        """
-        return query
-    elif query_type == "debt_expen_ratio":
-        query = f"""
-        SELECT rvarki.government_debt.year, rvarki.GOVERNMENT_DEBT.countryname, rvarki.government_debt.governmentdebt, rvarki.GOVERNMENT_EXPENDITURE.GOVERNMENT_EXPENDITURE 
-        FROM rvarki.GOVERNMENT_DEBT
-        JOIN rvarki.GOVERNMENT_EXPENDITURE 
-        ON rvarki.GOVERNMENT_DEBT.countryname = rvarki.GOVERNMENT_EXPENDITURE.countryname 
-        AND rvarki.GOVERNMENT_DEBT.year = rvarki.GOVERNMENT_EXPENDITURE.year 
-        WHERE rvarki.GOVERNMENT_DEBT.countryname IN ({country_placeholders}) 
-        AND rvarki.government_debt.year BETWEEN :start_year AND :end_year
-        ORDER BY year
-        """
-        return query
+    return set(range(minyear, maxyear + 1))
+
+def get_year(table):
+    db = get_db()
+    cursor = db.cursor()
+    query = f"select DISTINCT t.year from {table} t"
+    cursor.execute(query)
+    years = cursor.fetchall()
+    cursor.close()
+    all_years = [year for (year,) in years]
+    minyear = min(all_years)
+    maxyear = max(all_years)
+    return set(range(minyear, maxyear + 1))
 
 @app.route("/query-data", methods = ['POST'])
 def get_data():
@@ -237,9 +215,13 @@ def get_data():
         return jsonify(final_data)
     
     elif query_type == "happiness_change":
-        query = assign_sql_query(query_type)
+        num_countries = len(country)
+        query = assign_sql_query(query_type, num_countries)
         # print(query)
-        cursor.execute(query,{'continent': country})
+        bind_variables = {'start_year': value1_q1, 'end_year': value2_q1}
+        for i, country in enumerate(country, start=1):
+            bind_variables[f'country{i}'] = country
+        cursor.execute(query, bind_variables)
         result = cursor.fetchall()
         cursor.close()
         # print(result)
@@ -253,7 +235,7 @@ def get_data():
     elif query_type == "obesity_change":
         query = assign_sql_query(query_type)
         # print(query)
-        cursor.execute(query,{'continent': country})
+        cursor.execute(query,bind_variables)
         result = cursor.fetchall()
         cursor.close()
         # print(result)
@@ -400,9 +382,10 @@ def query_page(page_number):
             cursor = db.cursor()
             cursor.execute(query)
             result = cursor.fetchall()
+            years = get_years('rvarki.happiness')
             cursor.close()
-            final_continents = [row[0] for row in result]
-            return jsonify({'final_continents': final_continents , 'table_name': query_type})
+            final_data = [{'continent': row[0]} for row in result]
+            return jsonify({"final_country": list({i['continent'] for i in final_data}) , 'table_name': query_type, 'years': list(sorted(years))})
         
         elif query_type == "obesity_change":
             htmlPage = 2

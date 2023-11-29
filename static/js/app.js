@@ -174,6 +174,7 @@ function getQueryPage(queryType, pageNumber){
         processData: false,
         contentType: false,
         success: function(response) {
+            console.log(response);
             // Handle the response here
             $(".filters").removeClass("d-none");
             // updateChart(response.result)

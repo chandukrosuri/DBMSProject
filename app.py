@@ -391,7 +391,7 @@ def feedbackPage():
 
 @app.route('/logout', methods = ['GET'])
 def logout():
-    return logout()
+    return redirect('/login')
 def get_common_attributes(arr1,arr2):
         return set(arr1).intersection(set(arr2))
     

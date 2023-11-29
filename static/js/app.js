@@ -21,12 +21,6 @@ function toggleDropdown() {
     dropdownContent.classList.toggle("show");
 }
 
-// function toggleResultDiv(pageName) {
-//     var resultContainer = document.getElementById("result-container-" + pageName);
-//     resultContainer.style.display = "block";
-//     window.location.href = "/" + pageName;
-// }
-  // Event listener for form submission
 $(function() {    
     $('#submitForm').on('click', function(event) {
         event.preventDefault();
@@ -73,6 +67,8 @@ function updateChart(data, queryType) {
     console.log("data: ", data);
     console.log("response data: ", data[0].ratio);
     const canvas = document.getElementById('myChart');
+    var insightsContainer = document.getElementById('insightsContainer'); // Add an element for insights
+    var desc = document.getElementById('descr');
 
     // Check if a Chart instance already exists
     if (canvas.chart) {
@@ -101,6 +97,31 @@ function updateChart(data, queryType) {
     // Create a new Chart instance
     const ctx = canvas.getContext('2d');
     var [xLabel, yLabel] = getLabels(queryType);
+
+    // Find the highest and lowest values for each country
+    const insights = [];
+    Object.keys(datasets).forEach(country => {
+        const countryData = datasets[country].data;
+        const maxDataPoint = countryData.reduce((max, dataPoint) => (dataPoint.y > max.y ? dataPoint : max), countryData[0]);
+        const minDataPoint = countryData.reduce((min, dataPoint) => (dataPoint.y < min.y ? dataPoint : min), countryData[0]);
+        
+        insights.push({
+            country: country,
+            highest: { value: maxDataPoint.y, year: maxDataPoint.x },
+            lowest: { value: minDataPoint.y, year: minDataPoint.x }
+        });
+    });
+
+    // Log insights
+    console.log('Insights:', insights);
+
+    // Display insights below the graph
+    desc.classList.remove('d-none');
+    insightsContainer.classList.remove('d-none');
+    insightsContainer.innerHTML = insights.map(insight => `
+        <p>${insight.country} - Highest value: ${insight.highest.value} (${insight.highest.year}), Lowest value: ${insight.lowest.value} (${insight.lowest.year})</p>
+    `).join('');
+
     canvas.chart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -132,6 +153,8 @@ function updateChart(data, queryType) {
         },
     });
 }
+
+
 
 
 

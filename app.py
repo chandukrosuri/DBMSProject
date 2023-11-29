@@ -254,15 +254,20 @@ def get_data():
         return jsonify(final_data)
     
     elif query_type == "suicide_mean":
-        query = assign_sql_query(query_type)
-        # print(query)
-        cursor.execute(query,{'country': country})
+        num_countries = len(country)
+        query = assign_sql_query(query_type, num_countries)
+        print(query)
+        bind_variables = {'start_year': value1_q1, 'end_year': value2_q1}
+        for i, country in enumerate(country, start=1):
+            bind_variables[f'country{i}'] = country
+        cursor.execute(query,bind_variables)
         result = cursor.fetchall()
         cursor.close()
-        # print(result)
+        print(result)
         final_data = [{
+            'country': row[2],
             'year': row[0],
-            'mean_deviation': row[1],  # Ensure not to divide by zero
+            'ratio': row[1],  # Ensure not to divide by zero
         } for row in result]
         print(final_data)
         return jsonify(final_data)
@@ -425,7 +430,8 @@ def query_page(page_number):
         elif query_type == "suicide_mean":
             htmlPage = 3
             final_country = get_available_countries("rvarki.suicide_rate")
-            return jsonify({'final_country': final_country , 'table_name': query_type})  
+            years = get_year('rvarki.suicide_rate')
+            return jsonify({'final_country': final_country , 'table_name': query_type, 'years': list(sorted(years))})  
         
         elif query_type == "pollution_rank":
             htmlPage = 4

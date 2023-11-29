@@ -58,10 +58,8 @@ $(function() {
             success: function(response) {
                 // Handle the response here
                 console.log('Data received:', response);
-                console.log(response.type);
-                console.log("res:", JSON.stringify(response.result));
                 $("#result-container").removeClass("d-none");
-                updateChart(response)
+                updateChart(response, formName);
             },
             error: (functionError => {
                 console.log(functionError);
@@ -70,7 +68,8 @@ $(function() {
     })
 });
 
-function updateChart(data) {
+function updateChart(data, queryType) {
+    console.log("data: ", data);
     console.log("response data: ", data[0].ratio);
     const canvas = document.getElementById('myChart');
 
@@ -100,6 +99,7 @@ function updateChart(data) {
 
     // Create a new Chart instance
     const ctx = canvas.getContext('2d');
+    var [xLabel, yLabel] = getLabels(queryType);
     canvas.chart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -117,14 +117,14 @@ function updateChart(data) {
                     },
                     title: {
                         display: true,
-                        text: 'Year',
+                        text: xLabel,
                     },
                 },
                 y: {
                     min: Math.min(...data.map(item => item.ratio)),
                     title: {
                         display: true,
-                        text: 'Ratio',
+                        text: yLabel,
                     },
                 },
             },
@@ -206,4 +206,33 @@ function getQueryPage(queryType, pageNumber){
             console.log(functionError);
         })
     });
+}
+
+function getLabels(queryType) {
+    switch (queryType) {
+        case 'education_gdp_ratio':
+            return ['Year', 'GDP/Education Ratio'];
+
+        case 'debt_expen_ratio':
+            return ['Year', 'Debt/Expenditure Ratio'];
+
+        case 'happiness_change':
+            return ['Year', 'Happiness Percentage Change'];
+
+        case 'obesity_change':
+            return ['Year', 'Obesity Percentage Change'];
+
+        case 'suicide_mean':
+            return ['Year', 'Suicide Rate Mean Deviation'];
+
+        case 'pollution_rank':
+            return ['Year', 'Air Pollution Rank'];
+
+        case 'medical_contribution':
+            return ['Year', 'Medical Contribution'];
+
+        default:
+            // Default labels if queryType doesn't match any case
+            return ['X Label', 'Y Label'];
+    }
 }

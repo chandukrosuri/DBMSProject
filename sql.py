@@ -42,12 +42,12 @@ def assign_sql_query(query_type, num_countries):
         SELECT continent, year, avg_happiness, prev_year_happiness, (avg_happiness - prev_year_happiness) / prev_year_happiness * 100 AS percent_change
         FROM yearly_avg_lag
         WHERE prev_year_happiness IS NOT NULL AND continent IN ({country_placeholders})
-        AND rvarki.happiness.year BETWEEN :start_year AND :end_year
+        AND year BETWEEN :start_year AND :end_year
         ORDER BY year
         """
         return query
     elif query_type == "obesity_change":
-        query = """
+        query = f"""
         WITH yearly_avg_obesity AS (
             SELECT c.continent, o.year, AVG(o.bothsexes) AS avg_obesity
             FROM rvarki.obesity o
@@ -60,7 +60,8 @@ def assign_sql_query(query_type, num_countries):
         )
         SELECT continent, year, ROUND(avg_obesity, 2) AS avg_obesity, ROUND(prev_year_obesity,2) AS prev_year_obesity, ROUND((avg_obesity - prev_year_obesity) / prev_year_obesity * 100, 2) AS percent_change
         FROM yearly_avg_obesity_lag
-        WHERE prev_year_obesity IS NOT NULL AND continent = :continent
+        WHERE prev_year_obesity IS NOT NULL AND continent IN ({country_placeholders})
+        AND year BETWEEN :start_year AND :end_year
         ORDER BY continent, year
         """
         return query

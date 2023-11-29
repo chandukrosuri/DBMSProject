@@ -5,7 +5,7 @@ def assign_sql_query(query_type, num_countries):
         # query = f"select rvarki.gdp.year,rvarki.gdp.gdp,rvarki.average_schooling_years.avg_yearsof_schooling from rvarki.gdp join rvarki.average_schooling_years on rvarki.gdp.countryname=rvarki.average_schooling_years.countryname and rvarki.gdp.year=rvarki.average_schooling_years.year where rvarki.gdp.countryname = {country} order by year;"
 
         query = f"""
-        SELECT rvarki.gdp.year, rvarki.gdp.countryname, rvarki.gdp.gdp, rvarki.average_schooling_years.avg_yearsof_schooling 
+        SELECT rvarki.gdp.year, rvarki.gdp.countryname, (rvarki.gdp.gdp/100000000) as gdp, rvarki.average_schooling_years.avg_yearsof_schooling 
         FROM rvarki.gdp 
         JOIN rvarki.average_schooling_years 
         ON rvarki.gdp.countryname = rvarki.average_schooling_years.countryname 

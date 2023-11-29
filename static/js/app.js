@@ -211,7 +211,7 @@ function getQueryPage(queryType, pageNumber){
 function getLabels(queryType) {
     switch (queryType) {
         case 'education_gdp_ratio':
-            return ['Year', 'GDP/Education Ratio'];
+            return ['Year', 'GDP (scaled to 100,000,000)/Avg_Years_Of_Education Ratio'];
 
         case 'debt_expen_ratio':
             return ['Year', 'Debt/Expenditure Ratio'];

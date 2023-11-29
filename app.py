@@ -28,8 +28,6 @@ def close_db(e=None):
 @app.route('/')
 def home():
     # print(get_max_value("education_gdp_ratio",2000))
-    if 'logged_in' not in session or not session['logged_in']:
-        return redirect(url_for('login'))
     db = get_db()
     cursor = db.cursor()
     query = f"select COUNT(DISTINCT table_name) from user_tab_privs where not table_name = 'BIN$Cl76UdyDWzrgY1Ji8gq87Q==$0' and not table_name = 'USERS' and not table_name = 'SUNEETJAIN' and not table_name = 'KROSURIS'"
@@ -389,15 +387,21 @@ def feedbackPage():
         rating = request.form.get('rating')
     return render_template('feedback.html', pageName = "feedback")
 
-@app.route('/logout', methods = ['GET'])
+@app.route('/logout')
 def logout():
-    return redirect('/login')
+    session.pop('logged_in', None)  # Remove 'logged_in' from session
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('login'))
+
+
 def get_common_attributes(arr1,arr2):
         return set(arr1).intersection(set(arr2))
     
 
 @app.route('/query-page/<page_number>', methods=['GET', 'POST'])
 def query_page(page_number):
+    if 'logged_in' not in session or not session['logged_in']:
+        return redirect(url_for('login'))
     print("page-number: "+page_number)
     htmlPage = page_number
     if request.method == 'POST':

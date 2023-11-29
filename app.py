@@ -291,9 +291,14 @@ def get_data():
         return jsonify(final_data)
     
     elif query_type == "medical_contribution":
-        query = assign_sql_query(query_type)
+        num_countries = len(country)
+        query = assign_sql_query(query_type, num_countries)
         # print(query)
-        cursor.execute(query,{'country': country})
+        bind_variables = {'start_year': value1_q1, 'end_year': value2_q1}
+        for i, country in enumerate(country, start=1):
+            bind_variables[f'country{i}'] = country
+        print(bind_variables)
+        cursor.execute(query,bind_variables)
         result = cursor.fetchall()
         cursor.close()
         # print(result)
@@ -446,10 +451,11 @@ def query_page(page_number):
         elif query_type == "medical_contribution":
             htmlPage = 5
             table1,table2 = assign_table_names(query_type)
-            country_debt = get_available_countries(table1)
-            country_expen = get_available_countries(table2)
-            final_country = get_common_attributes(country_debt,country_expen)
-            return jsonify({'final_country': final_country , 'table_name': query_type})
+            country_doctors = get_available_countries(table1)
+            country_dentists = get_available_countries(table2)
+            final_country = get_common_attributes(country_doctors,country_dentists)
+            years = get_years(table1, table2)
+            return jsonify({'final_country': list(sorted(final_country)) , 'table_name': query_type, 'years': list(sorted(years))})
         # Call a function to handle the query and generate results (e.g., data for the graph)
         # query_results = handle_query(query_type, **params)
         # return jsonify(query_results)

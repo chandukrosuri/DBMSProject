@@ -159,7 +159,7 @@ def assign_sql_query(query_type, num_countries):
         return query
     
     elif query_type == "medical_contribution":
-        query = """
+        query = f"""
         WITH GlobalTotals AS (
             SELECT 
                 d.year,
@@ -181,7 +181,7 @@ def assign_sql_query(query_type, num_countries):
             JOIN 
                 rvarki.NUMBER_OF_MEDICALDOCTORS m ON d.countryname = m.countryname AND d.year = m.year
             WHERE
-                d.countryname = :country
+                d.countryname = ({country_placeholders}) 
             GROUP BY 
                 d.year, d.countryname
         )
@@ -195,6 +195,8 @@ def assign_sql_query(query_type, num_countries):
             CountryTotals ct
         JOIN 
             GlobalTotals gt ON ct.year = gt.year
+        WHERE
+            ct.year BETWEEN :start_year AND :end_year
         ORDER BY 
             ct.year
         """

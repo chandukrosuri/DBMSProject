@@ -236,3 +236,47 @@ function getLabels(queryType) {
             return ['X Label', 'Y Label'];
     }
 }
+
+function getColorForDataValue(dataValue, maxValue) {
+    const ratio = dataValue / maxValue;
+    // Now use the ratio to determine color; this is a simple linear scale
+    const hue = (120 * (1 - ratio)).toString(10);
+    return ["hsl(", hue, ",100%,50%)"].join("");
+}
+
+function initializeMap() {
+    $("#map").removeClass("d-none");
+    var map = L.map('map').setView([20, 0], 2); // World view
+    // Fetch the max data value first
+    fetch('/api/max_value')
+    .then(response => response.json())
+    .then(response => {
+        const maxValue = response.max_value;
+
+        // Then fetch the actual data
+        fetch('/api/data')
+        .then(response => response.json())
+        .then(data => {
+            // Fetch the GeoJSON
+            fetch('{{ url_for("static", filename="countries.geo.json") }}')
+            .then(response => response.json())
+            .then(geojsonData => {
+                // Add the GeoJSON layer
+                L.geoJson(geojsonData, {
+                    style: function(feature) {
+                        var countryName = feature.properties.name;
+                        var dataValue = data[countryName] || 0;
+                        return {
+                            fillColor: getColorForDataValue(dataValue, maxValue),
+                            weight: 2,
+                            opacity: 1,
+                            color: 'white',
+                            fillOpacity: 0.7
+                        };
+                    }
+                }).addTo(map);
+            });
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    });
+}

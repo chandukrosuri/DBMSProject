@@ -27,6 +27,7 @@ def close_db(e=None):
 
 @app.route('/')
 def home():
+    print(get_map_data("education_gdp_ratio",2000))
     if 'logged_in' not in session or not session['logged_in']:
         return redirect(url_for('login'))
     db = get_db()
@@ -123,6 +124,17 @@ def logout():
 
 def get_common_attributes(arr1,arr2):
         return set(arr1).intersection(set(arr2))
+
+@app.route('/api/max_value')
+def max_value():
+    max_value = get_max_value()  # Your function to calculate the max value
+    return jsonify(max_value=max_value)
+
+@app.route('/api/data')
+def heat_data():
+    data = get_map_data()
+    return jsonify(data)
+
 
 def assign_table_names(query_type):
     if query_type == "education_gdp_ratio":
@@ -350,9 +362,10 @@ def get_common_attributes(arr1,arr2):
         return set(arr1).intersection(set(arr2))
     
 
-@app.route('/query-page', methods=['GET', 'POST'])
-def query_page():
-    htmlPage = 1
+@app.route('/query-page/<page_number>', methods=['GET', 'POST'])
+def query_page(page_number):
+    print("page-number: "+page_number)
+    htmlPage = page_number
     if request.method == 'POST':
         # Process the selected query and parameters
         query_type = request.get_data(as_text=True)
@@ -364,16 +377,16 @@ def query_page():
             final_country = get_common_attributes(country_education,country_gpd)
             years = get_years('rvarki.average_schooling_years', 'rvarki.gdp')
             htmlPage = 1
-            return jsonify({'final_country': list(final_country) , 'table_name': query_type, 'years': list(sorted(years))})      
+            return jsonify({'final_country': list(sorted(final_country)) , 'table_name': query_type, 'years': list(sorted(years))})      
 
         elif query_type == "debt_expen_ratio":
             table1,table2 = assign_table_names(query_type)
             country_debt = get_available_countries(table1)
             country_expen = get_available_countries(table2)
             final_country = get_common_attributes(country_debt,country_expen)
-            years = get_years('rvarki.average_schooling_years', 'rvarki.gdp')
+            years = get_years(table1, table2)
             htmlPage = 1
-            return jsonify({'final_country': final_country , 'table_name': query_type})
+            return jsonify({'final_country': list(sorted(final_country)) , 'table_name': query_type, 'years': list(sorted(years))})
         
         elif query_type == "happiness_change":
             htmlPage = 2
@@ -453,136 +466,42 @@ def query_page():
 
     return render_template('Q'+ str(htmlPage) +'.html')
 
-# def get_years():
-#     db = get_db()
-#     cursor = db.cursor()
-#     # query_type = request.args.get('query_type')
-#     # country = request.args.get('country')
-#     query_type = "medical_contribution"
-#     country = "Italy"
-#     # table1,table2 = assign_table_names(query_type)
-#     # subq = assign_sql_query(query_type)
-#     # print(subq)
-#     query = assign_sql_query(query_type)
-#     # print(query)
-#     cursor.execute(query, {'country': country})
-#     result = cursor.fetchall()
-#     cursor.close()
-#     if result:
-#         years = [row[0] for row in result]
-#         print(years)
-#         return jsonify({'years_range': (min(years), max(years))})
-#     else:
-#         return jsonify({'error': 'No data found for the selected country'})
+def get_map_data(query_type,year):
+    if query_type == "education_gdp_ratio":
+        query = """
+        SELECT rvarki.gdp.year, rvarki.gdp.countryname, ROUND((rvarki.gdp.gdp/rvarki.average_schooling_years.avg_yearsof_schooling),2) as ratio
+        FROM rvarki.gdp 
+        JOIN rvarki.average_schooling_years 
+        ON rvarki.gdp.countryname = rvarki.average_schooling_years.countryname 
+        AND rvarki.gdp.year = rvarki.average_schooling_years.year 
+        WHERE rvarki.gdp.year = :year
+        ORDER BY countryname
+        """
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute(query,{'year':year})
+        result = cursor.fetchall()
+        final_data = [{
+            'country': row[1],
+            'ratio': row[2]  # Ensure not to divide by zero
+        } for row in result]
+        return final_data
 
-# def get_data():
-#     db = get_db()
-#     cursor = db.cursor()
-#     query_type = "medical_contribution"
-#     country = "Italy"
-#     # query_type = request.args.get('query_type')
-#     # country = request.args.get('country')
-#     if query_type == "education_gdp_ratio":
-#         query = assign_sql_query(query_type)
-#         # print(query)
-#         cursor.execute(query,{'country': country})
-#         result = cursor.fetchall()
-#         cursor.close()
-
-#     # Process the results to calculate the GDP/Education ratio
-#         final_data = [{
-#             'year': row[0],
-#             'ratio': (row[1] / row[2]) if row[2] else None  # Ensure not to divide by zero
-#         } for row in result]
-#         print(final_data)
-#         return jsonify(final_data)
-    
-#     elif query_type == "debt_expen_ratio":
-#         query = assign_sql_query(query_type)
-#         # print(query)
-#         cursor.execute(query,{'country': country})
-#         result = cursor.fetchall()
-#         cursor.close()
-#         # print(result)
-#     # Process the results to calculate the Debt/Expen ratio
-#         # for row in result:
-#         #     print(row[0],row[1],row[2])
-#         final_data = [{
-#             'year': row[0],
-#             'ratio': (row[1] / row[2]) if row[1] and row[2] else None  # Ensure not to divide by zero
-#         } for row in result]
-#         print(final_data)
-#         return jsonify(final_data)
-    
-#     elif query_type == "happiness_change":
-#         query = assign_sql_query(query_type)
-#         # print(query)
-#         cursor.execute(query,{'continent': country})
-#         result = cursor.fetchall()
-#         cursor.close()
-#         # print(result)
-#         final_data = [{
-#             'year': row[1],
-#             'percentage_change': row[4],  # Ensure not to divide by zero
-#         } for row in result]
-#         # print(final_data)
-#         return jsonify(final_data)
-    
-#     elif query_type == "obesity_change":
-#         query = assign_sql_query(query_type)
-#         # print(query)
-#         cursor.execute(query,{'continent': country})
-#         result = cursor.fetchall()
-#         cursor.close()
-#         # print(result)
-#         final_data = [{
-#             'year': row[1],
-#             'percentage_change': row[4],  # Ensure not to divide by zero
-#         } for row in result]
-#         print(final_data)
-#         return jsonify(final_data)
-    
-#     elif query_type == "suicide_mean":
-#         query = assign_sql_query(query_type)
-#         # print(query)
-#         cursor.execute(query,{'country': country})
-#         result = cursor.fetchall()
-#         cursor.close()
-#         # print(result)
-#         final_data = [{
-#             'year': row[0],
-#             'mean_deviation': row[1],  # Ensure not to divide by zero
-#         } for row in result]
-#         print(final_data)
-#         return jsonify(final_data)
-    
-#     elif query_type == "pollution_rank":
-#         query = assign_sql_query(query_type)
-#         # print(query)
-#         cursor.execute(query,{'country': country})
-#         result = cursor.fetchall()
-#         cursor.close()
-#         # print(result)
-#         final_data = [{
-#             'year': row[0],
-#             'rank': row[3],  # Ensure not to divide by zero
-#         } for row in result]
-#         print(final_data)
-#         return jsonify(final_data)
-    
-#     elif query_type == "medical_contribution":
-#         query = assign_sql_query(query_type)
-#         # print(query)
-#         cursor.execute(query,{'country': country})
-#         result = cursor.fetchall()
-#         cursor.close()
-#         # print(result)
-#         final_data = [{
-#             'year': row[0],
-#             'contribution': row[4],  # Ensure not to divide by zero
-#         } for row in result]
-#         print(final_data)
-#         return jsonify(final_data)
+def get_max_value(query_type,year):
+    if query_type == "education_gdp_ratio":
+        query = """
+        SELECT MAX(ROUND((rvarki.gdp.gdp/rvarki.average_schooling_years.avg_yearsof_schooling),2)) as ratio
+                FROM rvarki.gdp 
+                JOIN rvarki.average_schooling_years 
+                ON rvarki.gdp.countryname = rvarki.average_schooling_years.countryname 
+                AND rvarki.gdp.year = rvarki.average_schooling_years.year 
+                WHERE rvarki.gdp.year = :year
+        """
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute(query,{'year':year})
+        result = cursor.fetchone()
+        return result[0]
 
 
 if __name__ == '__main__':

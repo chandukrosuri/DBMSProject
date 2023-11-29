@@ -229,7 +229,7 @@ function getLabels(queryType) {
             return ['Year', 'Air Pollution Rank'];
 
         case 'medical_contribution':
-            return ['Year', 'Medical Contribution'];
+            return ['Year', 'Percentage of Global Medical Personnel'];
 
         default:
             // Default labels if queryType doesn't match any case

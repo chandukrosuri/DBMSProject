@@ -274,11 +274,16 @@ function getLabels(queryType) {
 }
 
 function getColorForDataValue(dataValue, maxValue) {
-    const ratio = dataValue / maxValue;
-    // Now use the ratio to determine color; this is a simple linear scale
-    const hue = (120 * (1 - ratio)).toString(10);
-    return ["hsl(", hue, ",100%,50%)"].join("");
+    // Use a logarithmic scale for a better color spread
+    const minHue = 240; // blue color
+    const maxHue = 0; // red color
+    const logValue = Math.log(dataValue + 1); // adding 1 to avoid log(0)
+    const logMax = Math.log(maxValue + 1); // adding 1 to avoid log(0)
+    const scale = (logValue / logMax);
+    const hue = minHue + scale * (maxHue - minHue);
+    return `hsl(${hue}, 100%, 50%)`;
 }
+
 
 function initializeMap(queryType, year) {
     console.log("here initializeMap")
@@ -290,21 +295,22 @@ function initializeMap(queryType, year) {
         'year': year,
     }))
 
-    .then(response => {
-        console.log("heat res: ", response);
-        return response;
-    })
+    .then(response => response.json())
     .then(response => {
         const maxValue = response.max_value;
-
+        console.log(maxValue)
         // Then fetch the actual data
         fetch('/api/data?' + new URLSearchParams({
             'queryType': queryType,
             'year': year,
         }))
         .then(response => response.json())
-        .then(data => {
-            // Fetch the GeoJSON
+        .then(arrayData => {
+            const data = arrayData.reduce((obj, item) => {
+                obj[item.country] = item.ratio;
+                return obj;
+            }, {});
+            // console.log("Processed data object:", data);
             fetch('/static/countries.geo.json')
             .then(response => response.json())
             .then(geojsonData => {
@@ -313,8 +319,11 @@ function initializeMap(queryType, year) {
                     style: function(feature) {
                         var countryName = feature.properties.name;
                         var dataValue = data[countryName] || 0;
+                        var fillColor = getColorForDataValue(dataValue, maxValue);
+                        // console.log(`Styling ${countryName}: Data Value = ${dataValue}, Color = ${fillColor}`);
+                        // console.log(`Styling ${countryName}: Data Value = ${dataValue}`);
                         return {
-                            fillColor: getColorForDataValue(dataValue, maxValue),
+                            fillColor: fillColor,
                             weight: 2,
                             opacity: 1,
                             color: 'white',

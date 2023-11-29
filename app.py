@@ -27,7 +27,7 @@ def close_db(e=None):
 
 @app.route('/')
 def home():
-    # print(get_map_data("education_gdp_ratio",2000))
+    # print(get_max_value("education_gdp_ratio",2000))
     if 'logged_in' not in session or not session['logged_in']:
         return redirect(url_for('login'))
     db = get_db()
@@ -126,14 +126,15 @@ def max_value():
     query_type = request.args.get('queryType')
     print("qt: "+query_type)
     
-    max_value = get_max_value(query_type,year)  # Your function to calculate the max value
+    max_value = get_max_value(query_type,int(year))  # Your function to calculate the max value
     return jsonify({'max_value': max_value})
 
 @app.route('/api/data')
 def heat_data():
     query_type = request.args.get('queryType')
     year = request.args.get('year')
-    data = get_map_data(query_type,year)
+    data = get_map_data(query_type,int(year))
+    # print(data)
     return jsonify(data)
 
 
@@ -525,6 +526,7 @@ def get_map_data(query_type,year):
 
 def get_max_value(query_type,year):
     if query_type == "education_gdp_ratio":
+        print(1)
         query = """
         SELECT MAX(ROUND((rvarki.gdp.gdp/rvarki.average_schooling_years.avg_yearsof_schooling),2)) as ratio
                 FROM rvarki.gdp 
@@ -537,6 +539,7 @@ def get_max_value(query_type,year):
         cursor = db.cursor()
         cursor.execute(query,{'year':year})
         result = cursor.fetchone()
+        print(result[0])
         return result[0]
 
 

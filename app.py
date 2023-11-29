@@ -293,18 +293,18 @@ def get_data():
     elif query_type == "medical_contribution":
         num_countries = len(country)
         query = assign_sql_query(query_type, num_countries)
-        # print(query)
+        print(query)
         bind_variables = {'start_year': value1_q1, 'end_year': value2_q1}
         for i, country in enumerate(country, start=1):
             bind_variables[f'country{i}'] = country
-        print(bind_variables)
         cursor.execute(query,bind_variables)
         result = cursor.fetchall()
         cursor.close()
         # print(result)
         final_data = [{
+            'country': row[1],
             'year': row[0],
-            'contribution': row[4],  # Ensure not to divide by zero
+            'ratio': row[4],  # Ensure not to divide by zero
         } for row in result]
         print(final_data)
         return jsonify(final_data)

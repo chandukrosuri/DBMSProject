@@ -1,29 +1,34 @@
-def assign_sql_query(query_type):
+def assign_sql_query(query_type, num_countries):
+    country_placeholders = ', '.join(f':country{i}' for i in range(1, num_countries + 1))
+
     if query_type == "education_gdp_ratio":
         # query = f"select rvarki.gdp.year,rvarki.gdp.gdp,rvarki.average_schooling_years.avg_yearsof_schooling from rvarki.gdp join rvarki.average_schooling_years on rvarki.gdp.countryname=rvarki.average_schooling_years.countryname and rvarki.gdp.year=rvarki.average_schooling_years.year where rvarki.gdp.countryname = {country} order by year;"
-        query = """
-        SELECT rvarki.gdp.year, rvarki.gdp.gdp, rvarki.average_schooling_years.avg_yearsof_schooling 
+
+        query = f"""
+        SELECT rvarki.gdp.year, rvarki.gdp.countryname, rvarki.gdp.gdp, rvarki.average_schooling_years.avg_yearsof_schooling 
         FROM rvarki.gdp 
         JOIN rvarki.average_schooling_years 
         ON rvarki.gdp.countryname = rvarki.average_schooling_years.countryname 
         AND rvarki.gdp.year = rvarki.average_schooling_years.year 
-        WHERE rvarki.gdp.countryname = :country 
+        WHERE rvarki.gdp.countryname IN ({country_placeholders}) 
+        AND rvarki.gdp.year BETWEEN :start_year AND :end_year 
         ORDER BY year
         """
         return query
     elif query_type == "debt_expen_ratio":
-        query = """
-        SELECT rvarki.government_debt.year, rvarki.government_debt.governmentdebt, rvarki.GOVERNMENT_EXPENDITURE.GOVERNMENT_EXPENDITURE 
+        query = f"""
+        SELECT rvarki.government_debt.year, rvarki.GOVERNMENT_DEBT.countryname, rvarki.government_debt.governmentdebt, rvarki.GOVERNMENT_EXPENDITURE.GOVERNMENT_EXPENDITURE 
         FROM rvarki.GOVERNMENT_DEBT
         JOIN rvarki.GOVERNMENT_EXPENDITURE 
         ON rvarki.GOVERNMENT_DEBT.countryname = rvarki.GOVERNMENT_EXPENDITURE.countryname 
         AND rvarki.GOVERNMENT_DEBT.year = rvarki.GOVERNMENT_EXPENDITURE.year 
-        WHERE rvarki.GOVERNMENT_DEBT.countryname = :country
+        WHERE rvarki.GOVERNMENT_DEBT.countryname IN ({country_placeholders}) 
+        AND rvarki.government_debt.year BETWEEN :start_year AND :end_year
         ORDER BY year
         """
         return query
     elif query_type == "happiness_change":
-        query = """
+        query = f"""
         WITH yearly_avg AS (
             SELECT c.continent, h.year, AVG(h.cantril_ladder_score) AS avg_happiness
             FROM rvarki.happiness h
@@ -36,12 +41,13 @@ def assign_sql_query(query_type):
         )
         SELECT continent, year, avg_happiness, prev_year_happiness, (avg_happiness - prev_year_happiness) / prev_year_happiness * 100 AS percent_change
         FROM yearly_avg_lag
-        WHERE prev_year_happiness IS NOT NULL AND continent = :continent
+        WHERE prev_year_happiness IS NOT NULL AND continent IN ({country_placeholders})
+        AND year BETWEEN :start_year AND :end_year
         ORDER BY year
         """
         return query
     elif query_type == "obesity_change":
-        query = """
+        query = f"""
         WITH yearly_avg_obesity AS (
             SELECT c.continent, o.year, AVG(o.bothsexes) AS avg_obesity
             FROM rvarki.obesity o
@@ -54,7 +60,8 @@ def assign_sql_query(query_type):
         )
         SELECT continent, year, ROUND(avg_obesity, 2) AS avg_obesity, ROUND(prev_year_obesity,2) AS prev_year_obesity, ROUND((avg_obesity - prev_year_obesity) / prev_year_obesity * 100, 2) AS percent_change
         FROM yearly_avg_obesity_lag
-        WHERE prev_year_obesity IS NOT NULL AND continent = :continent
+        WHERE prev_year_obesity IS NOT NULL AND continent IN ({country_placeholders})
+        AND year BETWEEN :start_year AND :end_year
         ORDER BY continent, year
         """
         return query

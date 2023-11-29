@@ -292,18 +292,20 @@ function initializeMap(queryType, year) {
 
     .then(response => {
         console.log("heat res: ", response);
-        response.json();
+        return response;
     })
     .then(response => {
         const maxValue = response.max_value;
 
         // Then fetch the actual data
-        var url1 = ('/api/data').concat(queryType);
-        fetch(url1)
+        fetch('/api/data?' + new URLSearchParams({
+            'queryType': queryType,
+            'year': year,
+        }))
         .then(response => response.json())
         .then(data => {
             // Fetch the GeoJSON
-            fetch('{{ url_for("static", filename="countries.geo.json") }}')
+            fetch('/static/countries.geo.json')
             .then(response => response.json())
             .then(geojsonData => {
                 // Add the GeoJSON layer

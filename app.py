@@ -121,14 +121,17 @@ def get_common_attributes(arr1,arr2):
 
 @app.route('/api/max_value')
 def max_value():
-    query_type = request.args.get('query_type')
     year = request.args.get('year')
+    print("year: "+year)
+    query_type = request.args.get('queryType')
+    print("qt: "+query_type)
+    
     max_value = get_max_value(query_type,year)  # Your function to calculate the max value
-    return jsonify(max_value=max_value)
+    return jsonify({'max_value': max_value})
 
 @app.route('/api/data')
 def heat_data():
-    query_type = request.args.get('query_type')
+    query_type = request.args.get('queryType')
     year = request.args.get('year')
     data = get_map_data(query_type,year)
     return jsonify(data)

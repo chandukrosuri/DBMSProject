@@ -68,7 +68,7 @@ def assign_sql_query(query_type, num_countries):
     elif query_type == "dentist_change":
         query = """"""
     elif query_type == "suicide_mean":
-        query = """
+        query = f"""
         WITH GlobalSuicideData AS (
             SELECT 
                 YEAR,
@@ -91,25 +91,29 @@ def assign_sql_query(query_type, num_countries):
             SELECT 
                 YEAR,
                 SUM(SUICIDE_NUMBER) AS TotalSuicides,
-                SUM(POPULATION) AS TotalPopulation
+                SUM(POPULATION) AS TotalPopulation,
+                COUNTRYNAME
             FROM 
-                (SELECT DISTINCT YEAR, AGE, SEX, SUICIDE_NUMBER, POPULATION 
+                (SELECT DISTINCT YEAR, AGE, SEX, SUICIDE_NUMBER, POPULATION, COUNTRYNAME 
                 FROM rvarki.suicide_rate
-                WHERE COUNTRYNAME = :Country)
+                WHERE COUNTRYNAME IN ({country_placeholders})
+                )
             GROUP BY 
-                YEAR
+                YEAR, COUNTRYNAME
         ),
         CountrySuicideRates AS (
             SELECT 
                 YEAR,
-                (TotalSuicides / TotalPopulation) * 100000 AS CountrySuicideRate
+                (TotalSuicides / TotalPopulation) * 100000 AS CountrySuicideRate,
+                COUNTRYNAME
             FROM 
                 CountrySuicideData
         ),
         YearlyDeviation AS (
             SELECT 
                 g.YEAR,
-                i.CountrySuicideRate - g.GlobalSuicideRate AS Deviation
+                i.CountrySuicideRate - g.GlobalSuicideRate AS Deviation,
+                COUNTRYNAME
             FROM 
                 CountrySuicideRates i
             JOIN 
@@ -117,18 +121,19 @@ def assign_sql_query(query_type, num_countries):
         )
         SELECT 
             YEAR,
-            ROUND(AVG(Deviation), 2) AS MeanDeviation
+            ROUND(AVG(Deviation), 2) AS MeanDeviation, COUNTRYNAME
         FROM 
             YearlyDeviation
+        WHERE YEAR BETWEEN :start_year AND :end_year
         GROUP BY 
-            YEAR
+            YEAR, COUNTRYNAME
         ORDER BY 
-            YEAR
+            COUNTRYNAME, YEAR
             """
         return query
     
     elif query_type == "pollution_rank":
-        query = """
+        query = f"""
         WITH RankedData AS (
             SELECT 
                 YEAR,
@@ -146,7 +151,8 @@ def assign_sql_query(query_type, num_countries):
         FROM 
             RankedData
         WHERE 
-            COUNTRYNAME = :country
+            COUNTRYNAME IN ({country_placeholders})
+            AND YEAR BETWEEN :start_year AND :end_year
         ORDER BY 
             YEAR
         """

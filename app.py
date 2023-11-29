@@ -27,16 +27,16 @@ def close_db(e=None):
 
 @app.route('/')
 def home():
-    print(get_map_data("education_gdp_ratio",2000))
+    # print(get_map_data("education_gdp_ratio",2000))
     if 'logged_in' not in session or not session['logged_in']:
         return redirect(url_for('login'))
     db = get_db()
     cursor = db.cursor()
-    query = f"select COUNT(DISTINCT table_name) from user_tab_privs where not table_name = 'BIN$Cl76UdyDWzrgY1Ji8gq87Q==$0' and not table_name = 'USERS' and not table_name = 'SUNEETJAIN'"
+    query = f"select COUNT(DISTINCT table_name) from user_tab_privs where not table_name = 'BIN$Cl76UdyDWzrgY1Ji8gq87Q==$0' and not table_name = 'USERS' and not table_name = 'SUNEETJAIN' and not table_name = 'KROSURIS'"
     cursor.execute(query)
     result = cursor.fetchone()
     number_of_tables = result[0]
-    query = f"select DISTINCT table_name from user_tab_privs where not table_name = 'BIN$Cl76UdyDWzrgY1Ji8gq87Q==$0' and not table_name = 'USERS' and not table_name = 'SUNEETJAIN'"
+    query = f"select DISTINCT table_name from user_tab_privs where not table_name = 'BIN$Cl76UdyDWzrgY1Ji8gq87Q==$0' and not table_name = 'USERS' and not table_name = 'SUNEETJAIN' and not table_name = 'KROSURIS'"
     cursor.execute(query)
     result = cursor.fetchall()
     sum = 0
@@ -44,7 +44,7 @@ def home():
     for row in result:
         table_name = row[0]
         query = f"select count(*) from rvarki.{table_name}"
-        # print(query)
+        print(query)
         cursor.execute(query)
         res = cursor.fetchone()
         sum += res[0]
@@ -159,6 +159,12 @@ def get_available_countries(table_name):
     for _ in countries:
         arr.append(_[0])
     return arr  # Returns an array with names of countries in alphabetical order
+
+@app.route('/years/<query_type>', methods = ['GET'])
+def get_years_by_query_type(query_type):
+    table1,table2 = assign_table_names(query_type)
+    years = get_years(table1, table2)
+    return jsonify({'years': list(sorted(years))})
 
 def get_years(table1, table2):
     db = get_db()

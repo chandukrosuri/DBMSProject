@@ -60,6 +60,7 @@ $(function() {
                 console.log('Data received:', response);
                 $("#result-container").removeClass("d-none");
                 updateChart(response, formName);
+                enableHeatMapFilters(formName);
             },
             error: (functionError => {
                 console.log(functionError);
@@ -208,6 +209,31 @@ function getQueryPage(queryType, pageNumber){
     });
 }
 
+function enableHeatMapFilters(queryType){
+    $("#year-filter").removeClass("d-none");
+    $("#map-filter").removeClass("d-none");
+    console.log("enableHeatMapFilters: ", queryType);
+    $.ajax({
+        url: ('/years').concat("/",queryType),
+        method: 'GET',
+        processData: false,
+        contentType: false,
+        success: function(response){
+            console.log("heatmap: ",response['years']);
+            var s = ''
+            for (var i = 0; i < response["years"].length; i++) {  
+                var value = response["years"][i];
+                s += '<option value="' + value + '">' + value + '</option>';  
+            }
+            $("#map-year").append(s);
+            $("#map-year").attr("name", queryType);
+        },
+        error: (functionError => {
+            console.log(functionError);
+        })
+    })
+}
+
 function getLabels(queryType) {
     switch (queryType) {
         case 'education_gdp_ratio':
@@ -245,6 +271,7 @@ function getColorForDataValue(dataValue, maxValue) {
 }
 
 function initializeMap() {
+    console.log("here initializeMap")
     $("#map").removeClass("d-none");
     var map = L.map('map').setView([20, 0], 2); // World view
     // Fetch the max data value first
